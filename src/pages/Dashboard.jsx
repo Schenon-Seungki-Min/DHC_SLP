@@ -21,7 +21,7 @@ export default function HospitalDashboard() {
     <div style={{ padding: '32px' }}>
       {/* Header */}
       <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#111827', margin: 0 }}>내 담당 병원</h1>
+        <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#111827', margin: 0 }}>내고객</h1>
         <p style={{ color: '#6b7280', marginTop: '4px', fontSize: '14px' }}>{hospitals.length}개 병원</p>
       </div>
 
