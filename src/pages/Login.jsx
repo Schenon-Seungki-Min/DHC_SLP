@@ -23,20 +23,20 @@ export default function Login() {
   const inputStyle = {
     width: '100%',
     padding: '14px 16px',
-    background: '#0f172a',
-    border: '1px solid #334155',
+    background: '#f9fafb',
+    border: '1px solid #e5e7eb',
     borderRadius: '10px',
-    color: '#e2e8f0',
+    color: '#111827',
     fontSize: '15px',
     boxSizing: 'border-box',
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Pretendard', -apple-system, sans-serif" }}>
-      <div style={{ background: '#1e293b', padding: '48px', borderRadius: '20px', border: '1px solid #334155', width: '400px', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+    <div style={{ minHeight: '100vh', background: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Pretendard', -apple-system, sans-serif" }}>
+      <div style={{ background: '#ffffff', padding: '48px', borderRadius: '20px', border: '1px solid #e5e7eb', width: '400px', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#f8fafc', margin: '0 0 8px' }}>병원 영업 관리</h1>
-          <p style={{ color: '#64748b', fontSize: '14px', margin: 0 }}>시스템에 로그인하세요</p>
+          <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#111827', margin: '0 0 8px' }}>병원 영업 관리</h1>
+          <p style={{ color: '#6b7280', fontSize: '14px', margin: 0 }}>시스템에 로그인하세요</p>
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -78,8 +78,8 @@ export default function Login() {
           </button>
         </form>
 
-        <div style={{ marginTop: '32px', padding: '16px', background: '#0f172a', borderRadius: '12px', fontSize: '13px' }}>
-          <p style={{ color: '#64748b', margin: '0 0 12px', fontWeight: '500' }}>데모 계정:</p>
+        <div style={{ marginTop: '32px', padding: '16px', background: '#f9fafb', borderRadius: '12px', fontSize: '13px' }}>
+          <p style={{ color: '#6b7280', margin: '0 0 12px', fontWeight: '500' }}>데모 계정:</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', color: '#94a3b8' }}>
             <div>
               <span style={{ color: '#38bdf8' }}>Admin:</span> admin / admin123
