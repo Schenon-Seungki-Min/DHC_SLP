@@ -32,9 +32,9 @@ export default function Layout({ children }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
             <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '700', color: '#111827', marginRight: '24px' }}>병원 영업 관리 시스템</h2>
-            <Link to="/dashboard" style={navStyle('/dashboard')}>캔버스 1</Link>
-            <Link to="/all-hospitals" style={navStyle('/all-hospitals')}>캔버스 2</Link>
-            <Link to="/map-planner" style={navStyle('/map-planner')}>캔버스 3</Link>
+            <Link to="/dashboard" style={navStyle('/dashboard')}>내고객</Link>
+            <Link to="/all-hospitals" style={navStyle('/all-hospitals')}>전체고객</Link>
+            <Link to="/map-planner" style={navStyle('/map-planner')}>콜플랜</Link>
             {user?.role === 'admin' && (
               <Link to="/admin" style={navStyle('/admin')}>Admin</Link>
             )}

@@ -15,7 +15,7 @@ export default function AllHospitalsDashboard() {
     <div style={{ padding: '32px' }}>
       {/* Header */}
       <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#111827', margin: 0 }}>전체 병원 방문 현황</h1>
+        <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#111827', margin: 0 }}>전체고객</h1>
         <p style={{ color: '#6b7280', marginTop: '4px', fontSize: '14px' }}>전체 {hospitals.length}개 병원</p>
       </div>
 

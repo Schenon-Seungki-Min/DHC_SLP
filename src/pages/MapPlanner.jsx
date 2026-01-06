@@ -32,8 +32,8 @@ export default function MapRoutePlanner() {
       {/* Header */}
       <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#111827', margin: 0 }}>동선 계획</h1>
-          <p style={{ color: '#6b7280', marginTop: '4px', fontSize: '14px' }}>지도에서 병원을 선택하세요</p>
+          <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#111827', margin: 0 }}>콜플랜</h1>
+          <p style={{ color: '#6b7280', marginTop: '4px', fontSize: '14px' }}>방문 계획을 세우세요</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           {['전체', '수도권', '지방'].map(f => (
