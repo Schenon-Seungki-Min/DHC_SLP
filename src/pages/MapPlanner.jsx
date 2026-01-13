@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const hospitals = [
+const clients = [
   { id: 1, name: '서울수면클리닉', address: '서울시 강남구', lat: 37.498, lng: 127.028, region: '수도권' },
   { id: 2, name: '강남브레인의원', address: '서울시 강남구', lat: 37.495, lng: 127.038, region: '수도권' },
   { id: 3, name: '분당숙면병원', address: '경기도 성남시', lat: 37.359, lng: 127.105, region: '수도권' },
@@ -16,8 +16,8 @@ export default function MapRoutePlanner() {
   const [myList, setMyList] = useState([]);
   const [hoveredId, setHoveredId] = useState(null);
 
-  const filtered = filter === '전체' ? hospitals : hospitals.filter(h => h.region === filter);
-  const toggleList = (h) => setMyList(prev => prev.find(x => x.id === h.id) ? prev.filter(x => x.id !== h.id) : [...prev, h]);
+  const filtered = filter === '전체' ? clients : clients.filter(c => c.region === filter);
+  const toggleList = (c) => setMyList(prev => prev.find(x => x.id === c.id) ? prev.filter(x => x.id !== c.id) : [...prev, c]);
   const isInList = (id) => myList.some(x => x.id === id);
 
   // 지도 영역 계산
@@ -51,18 +51,18 @@ export default function MapRoutePlanner() {
           </svg>
           
           {/* 마커들 */}
-          {filtered.map(h => {
-            const pos = toPos(h.lat, h.lng);
-            const inList = isInList(h.id);
-            const isHovered = hoveredId === h.id;
+          {filtered.map(c => {
+            const pos = toPos(c.lat, c.lng);
+            const inList = isInList(c.id);
+            const isHovered = hoveredId === c.id;
             return (
-              <div key={h.id} onClick={() => toggleList(h)} onMouseEnter={() => setHoveredId(h.id)} onMouseLeave={() => setHoveredId(null)}
+              <div key={c.id} onClick={() => toggleList(c)} onMouseEnter={() => setHoveredId(c.id)} onMouseLeave={() => setHoveredId(null)}
                 style={{ position: 'absolute', left: `${pos.x}%`, top: `${pos.y}%`, transform: 'translate(-50%, -50%)', cursor: 'pointer', zIndex: isHovered ? 10 : 1 }}>
                 <div style={{ width: inList ? '20px' : '14px', height: inList ? '20px' : '14px', borderRadius: '50%', background: inList ? '#4ade80' : '#3b82f6', border: '3px solid #f9fafb', boxShadow: isHovered ? '0 0 20px rgba(59,130,246,0.8)' : '0 2px 8px rgba(0,0,0,0.5)', transition: 'all 0.2s' }} />
                 {isHovered && (
                   <div style={{ position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)', marginBottom: '8px', background: '#f9fafb', padding: '8px 12px', borderRadius: '8px', whiteSpace: 'nowrap', fontSize: '13px', border: '1px solid #f3f4f6' }}>
-                    <div style={{ fontWeight: '600', color: '#111827' }}>{h.name}</div>
-                    <div style={{ color: '#6b7280', fontSize: '11px' }}>{h.address}</div>
+                    <div style={{ fontWeight: '600', color: '#111827' }}>{c.name}</div>
+                    <div style={{ color: '#6b7280', fontSize: '11px' }}>{c.address}</div>
                   </div>
                 )}
               </div>
@@ -73,7 +73,7 @@ export default function MapRoutePlanner() {
           <div style={{ position: 'absolute', bottom: '16px', left: '16px', background: '#f9fafb', padding: '12px 16px', borderRadius: '12px', fontSize: '12px', border: '1px solid #f3f4f6' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
               <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#3b82f6' }} />
-              <span style={{ color: '#6b7280' }}>처방 병원</span>
+              <span style={{ color: '#6b7280' }}>거래처</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#4ade80' }} />
@@ -90,19 +90,19 @@ export default function MapRoutePlanner() {
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {myList.length === 0 ? (
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', fontSize: '14px', textAlign: 'center' }}>
-                지도에서 병원을<br/>클릭하여 추가하세요
+                지도에서 거래처를<br/>클릭하여 추가하세요
               </div>
             ) : (
-              myList.map((h, i) => (
-                <div key={h.id} style={{ background: '#f9fafb', borderRadius: '12px', padding: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              myList.map((c, i) => (
+                <div key={c.id} style={{ background: '#f9fafb', borderRadius: '12px', padding: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span style={{ background: '#4ade80', color: '#f9fafb', width: '20px', height: '20px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '700' }}>{i + 1}</span>
-                      <span style={{ color: '#111827', fontWeight: '500' }}>{h.name}</span>
+                      <span style={{ color: '#111827', fontWeight: '500' }}>{c.name}</span>
                     </div>
-                    <div style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', marginLeft: '28px' }}>{h.address}</div>
+                    <div style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', marginLeft: '28px' }}>{c.address}</div>
                   </div>
-                  <button onClick={() => toggleList(h)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '18px', padding: '4px' }}>×</button>
+                  <button onClick={() => toggleList(c)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '18px', padding: '4px' }}>×</button>
                 </div>
               ))
             )}
