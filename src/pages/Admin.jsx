@@ -12,9 +12,10 @@ export default function AdminDashboard() {
   const [clients, setClients] = useState(initialClients);
   const [editPopup, setEditPopup] = useState(null);
   const [addPopup, setAddPopup] = useState(false);
+  const [confirmPopup, setConfirmPopup] = useState(null);
   const [newClient, setNewClient] = useState({ name: '', type: 'hospital', portfolio: 'sleepq', address: '', phone: '', email: '', neca: '', isPrescribing: false, staff: [{name: '', isRep: true, phone: '', email: ''}], partners: [] });
 
-  const closeAll = () => { setEditPopup(null); setAddPopup(false); };
+  const closeAll = () => { setEditPopup(null); setAddPopup(false); setConfirmPopup(null); };
 
   const togglePartner = (client, partner, isEdit = false) => {
     if (isEdit) {
@@ -59,11 +60,26 @@ export default function AdminDashboard() {
     setClients(prev => [...prev, {...newClient, id: Date.now()}]);
     setNewClient({ name: '', type: 'hospital', portfolio: 'sleepq', address: '', phone: '', email: '', neca: '', isPrescribing: false, staff: [{name: '', isRep: true, phone: '', email: ''}], partners: [] });
     setAddPopup(false);
+    setConfirmPopup(null);
   };
 
   const saveEdit = () => {
     setClients(prev => prev.map(c => c.id === editPopup.id ? editPopup : c));
     setEditPopup(null);
+    setConfirmPopup(null);
+  };
+
+  const handleDownloadExcel = () => {
+    // Mock Excel 다운로드
+    alert('Excel 파일 다운로드 기능 (실제 구현 시 라이브러리 사용 필요)');
+  };
+
+  const handleUploadExcel = (e) => {
+    // Mock Excel 업로드
+    const file = e.target.files[0];
+    if (file) {
+      alert(`Excel 파일 업로드: ${file.name} (실제 구현 시 파싱 로직 필요)`);
+    }
   };
 
   const inputStyle = { width: '100%', background: '#f9fafb', border: '1px solid #f3f4f6', borderRadius: '8px', padding: '10px 12px', color: '#111827', fontSize: '14px', boxSizing: 'border-box' };
@@ -187,7 +203,16 @@ export default function AdminDashboard() {
           <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#111827', margin: 0 }}>거래처 정보 관리</h1>
           <p style={{ color: '#6b7280', marginTop: '4px', fontSize: '14px' }}>{clients.length}개 거래처</p>
         </div>
-        <button onClick={() => setAddPopup(true)} style={{ padding: '12px 24px', background: 'linear-gradient(135deg, #3b82f6, #2563eb)', border: 'none', borderRadius: '10px', color: '#fff', fontWeight: '600', cursor: 'pointer', fontSize: '14px' }}>+ 거래처 등록</button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button onClick={handleDownloadExcel} style={{ padding: '12px 20px', background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '10px', color: '#111827', fontWeight: '600', cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            📥 Excel 다운로드
+          </button>
+          <label style={{ padding: '12px 20px', background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '10px', color: '#111827', fontWeight: '600', cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            📤 Excel 업로드
+            <input type="file" accept=".xlsx,.xls" onChange={handleUploadExcel} style={{ display: 'none' }} />
+          </label>
+          <button onClick={() => setAddPopup(true)} style={{ padding: '12px 24px', background: 'linear-gradient(135deg, #3b82f6, #2563eb)', border: 'none', borderRadius: '10px', color: '#fff', fontWeight: '600', cursor: 'pointer', fontSize: '14px' }}>+ 거래처 등록</button>
+        </div>
       </div>
 
       {/* Table */}
@@ -219,7 +244,7 @@ export default function AdminDashboard() {
             <button onClick={closeAll} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#6b7280', fontSize: '24px', cursor: 'pointer' }}>×</button>
             <h3 style={{ margin: '0 0 24px', color: '#111827' }}>거래처 등록</h3>
             <ClientForm data={newClient} setData={setNewClient} isEdit={false} />
-            <button onClick={saveNew} style={{ width: '100%', marginTop: '20px', padding: '14px', background: 'linear-gradient(135deg, #3b82f6, #2563eb)', border: 'none', borderRadius: '10px', color: '#fff', fontWeight: '600', cursor: 'pointer' }}>등록하기</button>
+            <button onClick={() => setConfirmPopup({ type: 'add', action: saveNew })} style={{ width: '100%', marginTop: '20px', padding: '14px', background: 'linear-gradient(135deg, #3b82f6, #2563eb)', border: 'none', borderRadius: '10px', color: '#fff', fontWeight: '600', cursor: 'pointer' }}>등록하기</button>
           </div>
         </div>
       )}
@@ -231,7 +256,30 @@ export default function AdminDashboard() {
             <button onClick={closeAll} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#6b7280', fontSize: '24px', cursor: 'pointer' }}>×</button>
             <h3 style={{ margin: '0 0 24px', color: '#111827' }}>거래처 수정</h3>
             <ClientForm data={editPopup} setData={setEditPopup} isEdit={true} />
-            <button onClick={saveEdit} style={{ width: '100%', marginTop: '20px', padding: '14px', background: 'linear-gradient(135deg, #4ade80, #22c55e)', border: 'none', borderRadius: '10px', color: '#f9fafb', fontWeight: '600', cursor: 'pointer' }}>저장하기</button>
+            <button onClick={() => setConfirmPopup({ type: 'edit', action: saveEdit })} style={{ width: '100%', marginTop: '20px', padding: '14px', background: 'linear-gradient(135deg, #4ade80, #22c55e)', border: 'none', borderRadius: '10px', color: '#f9fafb', fontWeight: '600', cursor: 'pointer' }}>저장하기</button>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Popup */}
+      {confirmPopup && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
+          <div style={{ background: '#ffffff', borderRadius: '16px', padding: '32px', width: '400px', border: '1px solid #f3f4f6', textAlign: 'center' }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
+            <h3 style={{ margin: '0 0 12px', color: '#111827', fontSize: '20px' }}>
+              {confirmPopup.type === 'add' ? '거래처를 등록하시겠습니까?' : '변경사항을 저장하시겠습니까?'}
+            </h3>
+            <p style={{ color: '#6b7280', margin: '0 0 24px', fontSize: '14px' }}>
+              {confirmPopup.type === 'add' ? '입력한 정보로 새로운 거래처가 등록됩니다.' : '수정한 내용이 저장되며 이전 정보는 덮어씌워집니다.'}
+            </p>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={() => setConfirmPopup(null)} style={{ flex: 1, padding: '12px', background: '#f3f4f6', border: 'none', borderRadius: '10px', color: '#6b7280', fontWeight: '600', cursor: 'pointer', fontSize: '14px' }}>
+                취소
+              </button>
+              <button onClick={confirmPopup.action} style={{ flex: 1, padding: '12px', background: confirmPopup.type === 'add' ? 'linear-gradient(135deg, #3b82f6, #2563eb)' : 'linear-gradient(135deg, #4ade80, #22c55e)', border: 'none', borderRadius: '10px', color: '#ffffff', fontWeight: '600', cursor: 'pointer', fontSize: '14px' }}>
+                {confirmPopup.type === 'add' ? '등록' : '저장'}
+              </button>
+            </div>
           </div>
         </div>
       )}
