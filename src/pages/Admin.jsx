@@ -12,7 +12,7 @@ export default function AdminDashboard() {
   const [clients, setClients] = useState(initialClients);
   const [editPopup, setEditPopup] = useState(null);
   const [addPopup, setAddPopup] = useState(false);
-  const [newClient, setNewClient] = useState({ name: '', address: '', phone: '', email: '', neca: '', isPrescribing: false, staff: [{name: '', isRep: true, phone: '', email: ''}], partners: [] });
+  const [newClient, setNewClient] = useState({ name: '', type: 'hospital', portfolio: 'sleepq', address: '', phone: '', email: '', neca: '', isPrescribing: false, staff: [{name: '', isRep: true, phone: '', email: ''}], partners: [] });
 
   const closeAll = () => { setEditPopup(null); setAddPopup(false); };
 
@@ -57,7 +57,7 @@ export default function AdminDashboard() {
 
   const saveNew = () => {
     setClients(prev => [...prev, {...newClient, id: Date.now()}]);
-    setNewClient({ name: '', address: '', phone: '', email: '', neca: '', isPrescribing: false, staff: [{name: '', isRep: true, phone: '', email: ''}], partners: [] });
+    setNewClient({ name: '', type: 'hospital', portfolio: 'sleepq', address: '', phone: '', email: '', neca: '', isPrescribing: false, staff: [{name: '', isRep: true, phone: '', email: ''}], partners: [] });
     setAddPopup(false);
   };
 
@@ -71,21 +71,83 @@ export default function AdminDashboard() {
 
   const ClientForm = ({ data, setData, isEdit }) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '60vh', overflowY: 'auto', paddingRight: '8px' }}>
+      {/* 기본 정보 */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
         <div><label style={labelStyle}>거래처명 *</label><input style={inputStyle} value={data.name} onChange={e => setData(prev => ({...prev, name: e.target.value}))} /></div>
         <div><label style={labelStyle}>대표 전화번호</label><input style={inputStyle} value={data.phone} onChange={e => setData(prev => ({...prev, phone: e.target.value}))} /></div>
       </div>
-      <div><label style={labelStyle}>거래처 주소</label><input style={inputStyle} value={data.address} onChange={e => setData(prev => ({...prev, address: e.target.value}))} /></div>
+
+      {/* 거래처 유형 + 포트폴리오 */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-        <div><label style={labelStyle}>대표 이메일</label><input style={inputStyle} value={data.email} onChange={e => setData(prev => ({...prev, email: e.target.value}))} /></div>
-        <div><label style={labelStyle}>NECA 등록일</label><input type="date" style={inputStyle} value={data.neca || ''} onChange={e => setData(prev => ({...prev, neca: e.target.value}))} /></div>
+        <div>
+          <label style={labelStyle}>거래처 유형 *</label>
+          <select style={inputStyle} value={data.type || 'hospital'} onChange={e => setData(prev => ({...prev, type: e.target.value}))}>
+            <option value="hospital">병원</option>
+            <option value="pharmacy">약국</option>
+          </select>
+        </div>
+        <div>
+          <label style={labelStyle}>포트폴리오 *</label>
+          <select style={inputStyle} value={data.portfolio || 'sleepq'} onChange={e => setData(prev => ({...prev, portfolio: e.target.value}))}>
+            <option value="sleepq">SleepQ</option>
+            <option value="coaching">코칭서비스</option>
+          </select>
+        </div>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <label style={{...labelStyle, margin: 0}}>처방 여부</label>
-        <button onClick={() => setData(prev => ({...prev, isPrescribing: !prev.isPrescribing}))} style={{ padding: '6px 16px', background: data.isPrescribing ? '#4ade80' : '#f3f4f6', border: 'none', borderRadius: '20px', color: data.isPrescribing ? '#f9fafb' : '#6b7280', cursor: 'pointer', fontSize: '13px' }}>
-          {data.isPrescribing ? '처방중' : '미처방'}
-        </button>
-      </div>
+
+      <div><label style={labelStyle}>거래처 주소</label><input style={inputStyle} value={data.address} onChange={e => setData(prev => ({...prev, address: e.target.value}))} /></div>
+      <div><label style={labelStyle}>대표 이메일</label><input style={inputStyle} value={data.email} onChange={e => setData(prev => ({...prev, email: e.target.value}))} /></div>
+
+      {/* SleepQ 전용 필드 */}
+      {data.portfolio === 'sleepq' && (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div><label style={labelStyle}>NECA 등록일</label><input type="date" style={inputStyle} value={data.neca || ''} onChange={e => setData(prev => ({...prev, neca: e.target.value}))} /></div>
+            <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+              <button onClick={() => setData(prev => ({...prev, isPrescribing: !prev.isPrescribing}))} style={{ padding: '10px 16px', background: data.isPrescribing ? '#4ade80' : '#f3f4f6', border: 'none', borderRadius: '8px', color: data.isPrescribing ? '#f9fafb' : '#6b7280', cursor: 'pointer', fontSize: '13px', fontWeight: '600', width: '100%' }}>
+                {data.isPrescribing ? '처방중' : '미처방'}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* 코칭서비스 전용 필드 */}
+      {data.portfolio === 'coaching' && (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div>
+              <label style={labelStyle}>전문분야</label>
+              <select style={inputStyle} value={data.specialty || 'obesity'} onChange={e => setData(prev => ({...prev, specialty: e.target.value}))}>
+                <option value="obesity">비만</option>
+                <option value="diabetes">당뇨</option>
+                <option value="both">비만+당뇨</option>
+              </select>
+            </div>
+            <div>
+              <label style={labelStyle}>담당팀</label>
+              <select style={inputStyle} value={data.team || 'south_east'} onChange={e => setData(prev => ({...prev, team: e.target.value}))}>
+                <option value="south_east">남동팀</option>
+                <option value="north">북부팀</option>
+              </select>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div>
+              <label style={labelStyle}>서비스 유형</label>
+              <select style={inputStyle} value={data.serviceType || 'glpop'} onChange={e => setData(prev => ({...prev, serviceType: e.target.value}))}>
+                <option value="glpop">GLP-OP</option>
+                <option value="cgm">CGM</option>
+              </select>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+              <button onClick={() => setData(prev => ({...prev, cgmBarozen: !prev.cgmBarozen}))} style={{ padding: '10px 16px', background: data.cgmBarozen ? '#4ade80' : '#f3f4f6', border: 'none', borderRadius: '8px', color: data.cgmBarozen ? '#f9fafb' : '#6b7280', cursor: 'pointer', fontSize: '13px', fontWeight: '600', width: '100%' }}>
+                CGM 바로젠 구매 {data.cgmBarozen ? 'O' : 'X'}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
 
       <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
