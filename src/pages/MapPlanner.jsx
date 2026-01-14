@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 
 const clients = [
-  { id: 1, name: '서울수면클리닉', type: 'hospital', portfolio: 'sleepq', address: '서울시 강남구', lat: 37.498, lng: 127.028, region: '수도권', isMyClient: true, hasScheduledVisit: true },
-  { id: 2, name: '강남브레인의원', type: 'hospital', portfolio: 'sleepq', address: '서울시 강남구', lat: 37.495, lng: 127.038, region: '수도권', isMyClient: true, hasScheduledVisit: false },
-  { id: 3, name: '분당숙면병원', type: 'hospital', portfolio: 'sleepq', address: '경기도 성남시', lat: 37.359, lng: 127.105, region: '수도권', isMyClient: false, hasScheduledVisit: false },
-  { id: 4, name: '인천꿈의원', type: 'hospital', portfolio: 'sleepq', address: '인천시 연수구', lat: 37.392, lng: 126.640, region: '수도권', isMyClient: true, hasScheduledVisit: true },
-  { id: 5, name: '수원힐링클리닉', type: 'hospital', portfolio: 'sleepq', address: '경기도 수원시', lat: 37.263, lng: 127.029, region: '수도권', isMyClient: false, hasScheduledVisit: false },
-  { id: 6, name: '건강약국', type: 'pharmacy', portfolio: 'coaching', address: '서울시 송파구', lat: 37.513, lng: 127.100, region: '수도권', isMyClient: true, hasScheduledVisit: true },
-  { id: 7, name: '부산해운대의원', type: 'hospital', portfolio: 'sleepq', address: '부산시 해운대구', lat: 35.163, lng: 129.160, region: '지방', isMyClient: false, hasScheduledVisit: false },
-  { id: 8, name: '대구수면센터', type: 'hospital', portfolio: 'sleepq', address: '대구시 중구', lat: 35.871, lng: 128.602, region: '지방', isMyClient: false, hasScheduledVisit: false },
-  { id: 9, name: '광주브레인클리닉', type: 'hospital', portfolio: 'sleepq', address: '광주시 서구', lat: 35.152, lng: 126.890, region: '지방', isMyClient: false, hasScheduledVisit: false },
+  { id: 1, name: '서울수면클리닉', type: 'hospital', portfolio: 'sleepq', address: '서울시 강남구', lat: 37.498, lng: 127.028, region: '수도권', isMyClient: true, progress: 4 },
+  { id: 2, name: '강남브레인의원', type: 'hospital', portfolio: 'sleepq', address: '서울시 강남구', lat: 37.495, lng: 127.038, region: '수도권', isMyClient: true, progress: 3 },
+  { id: 3, name: '분당숙면병원', type: 'hospital', portfolio: 'sleepq', address: '경기도 성남시', lat: 37.359, lng: 127.105, region: '수도권', isMyClient: false, progress: 2 },
+  { id: 4, name: '인천꿈의원', type: 'hospital', portfolio: 'sleepq', address: '인천시 연수구', lat: 37.392, lng: 126.640, region: '수도권', isMyClient: true, progress: 5 },
+  { id: 5, name: '수원힐링클리닉', type: 'hospital', portfolio: 'sleepq', address: '경기도 수원시', lat: 37.263, lng: 127.029, region: '수도권', isMyClient: false, progress: 2 },
+  { id: 6, name: '건강약국', type: 'pharmacy', portfolio: 'coaching', address: '서울시 송파구', lat: 37.513, lng: 127.100, region: '수도권', isMyClient: true, progress: 3 },
+  { id: 7, name: '부산해운대의원', type: 'hospital', portfolio: 'sleepq', address: '부산시 해운대구', lat: 35.163, lng: 129.160, region: '지방', isMyClient: false, progress: 1 },
+  { id: 8, name: '대구수면센터', type: 'hospital', portfolio: 'sleepq', address: '대구시 중구', lat: 35.871, lng: 128.602, region: '지방', isMyClient: false, progress: 2 },
+  { id: 9, name: '광주브레인클리닉', type: 'hospital', portfolio: 'sleepq', address: '광주시 서구', lat: 35.152, lng: 126.890, region: '지방', isMyClient: false, progress: 1 },
 ];
 
 export default function MapRoutePlanner() {
@@ -87,8 +87,8 @@ export default function MapRoutePlanner() {
             const pos = toPos(c.lat, c.lng);
             const inList = isInList(c.id);
             const isHovered = hoveredId === c.id;
-            // 마커 색상 분기: 빨강(방문예정) > 초록(내담당) > 파랑(기타)
-            const markerColor = c.hasScheduledVisit ? '#ef4444' : (c.isMyClient ? '#4ade80' : '#3b82f6');
+            // 마커 색상: 진척도 기반 그라데이션 (Dashboard와 동일)
+            const markerColor = c.progress >= 4 ? '#22c55e' : c.progress >= 3 ? '#f59e0b' : '#64748b';
             return (
               <div key={c.id} onClick={() => toggleList(c)} onMouseEnter={() => setHoveredId(c.id)} onMouseLeave={() => setHoveredId(null)}
                 style={{ position: 'absolute', left: `${pos.x}%`, top: `${pos.y}%`, transform: 'translate(-50%, -50%)', cursor: 'pointer', zIndex: isHovered ? 10 : 1 }}>
@@ -97,6 +97,7 @@ export default function MapRoutePlanner() {
                   <div style={{ position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)', marginBottom: '8px', background: '#f9fafb', padding: '8px 12px', borderRadius: '8px', whiteSpace: 'nowrap', fontSize: '13px', border: '1px solid #f3f4f6' }}>
                     <div style={{ fontWeight: '600', color: '#111827' }}>{c.name}</div>
                     <div style={{ color: '#6b7280', fontSize: '11px' }}>{c.address}</div>
+                    <div style={{ color: '#6b7280', fontSize: '11px', marginTop: '4px' }}>진척도: {c.progress}</div>
                   </div>
                 )}
               </div>
@@ -105,17 +106,18 @@ export default function MapRoutePlanner() {
 
           {/* 범례 */}
           <div style={{ position: 'absolute', bottom: '16px', left: '16px', background: '#f9fafb', padding: '12px 16px', borderRadius: '12px', fontSize: '12px', border: '1px solid #f3f4f6' }}>
+            <div style={{ fontWeight: '600', color: '#111827', marginBottom: '8px' }}>진척도</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-              <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ef4444' }} />
-              <span style={{ color: '#6b7280' }}>방문예정</span>
+              <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#22c55e' }} />
+              <span style={{ color: '#6b7280' }}>높음 (4-5)</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-              <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#4ade80' }} />
-              <span style={{ color: '#6b7280' }}>내 담당</span>
+              <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#f59e0b' }} />
+              <span style={{ color: '#6b7280' }}>중간 (3)</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#3b82f6' }} />
-              <span style={{ color: '#6b7280' }}>기타</span>
+              <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#64748b' }} />
+              <span style={{ color: '#6b7280' }}>낮음 (1-2)</span>
             </div>
           </div>
         </div>
