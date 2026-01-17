@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 
 const initialClients = [
-  { id: 1, name: '서울수면클리닉', address: '서울시 강남구 테헤란로 123', phone: '02-1234-5678', email: 'seoul@sleep.kr', neca: '2024-06-15', isPrescribing: true, staff: [{name: '김수면', isRep: true, phone: '010-1111-1111', email: 'kim@sleep.kr'}, {name: '이진료', isRep: false, phone: '010-2222-2222', email: 'lee@sleep.kr'}], partners: ['A파트너', 'B파트너'] },
-  { id: 2, name: '강남브레인의원', address: '서울시 강남구 역삼동 456', phone: '02-2345-6789', email: 'brain@clinic.kr', neca: '2024-07-20', isPrescribing: true, staff: [{name: '이두뇌', isRep: true, phone: '010-3333-3333', email: 'brain@clinic.kr'}], partners: ['A파트너'] },
-  { id: 3, name: '인천꿈의원', address: '인천시 연수구 송도동 321', phone: '032-456-7890', email: 'dream@incheon.kr', neca: null, isPrescribing: false, staff: [{name: '정꿈나라', isRep: true, phone: '010-4444-4444', email: 'dream@incheon.kr'}], partners: ['B파트너', 'C파트너'] },
+  { id: 1, name: '서울수면클리닉', type: 'hospital', portfolio: 'sleepq', address: '서울시 강남구 테헤란로 123', phone: '02-1234-5678', email: 'seoul@sleep.kr', neca: '2024-06-15', isPrescribing: true, staff: [{name: '김수면', isRep: true, phone: '010-1111-1111', email: 'kim@sleep.kr'}, {name: '이진료', isRep: false, phone: '010-2222-2222', email: 'lee@sleep.kr'}], partners: ['A파트너', 'B파트너'], grade: 'A', products: ['SleepQ'] },
+  { id: 2, name: '강남브레인의원', type: 'hospital', portfolio: 'sleepq', address: '서울시 강남구 역삼동 456', phone: '02-2345-6789', email: 'brain@clinic.kr', neca: '2024-07-20', isPrescribing: true, staff: [{name: '이두뇌', isRep: true, phone: '010-3333-3333', email: 'brain@clinic.kr'}], partners: ['A파트너'], grade: 'B', products: ['SleepQ'] },
+  { id: 3, name: '인천꿈의원', type: 'hospital', portfolio: 'sleepq', address: '인천시 연수구 송도동 321', phone: '032-456-7890', email: 'dream@incheon.kr', neca: null, isPrescribing: false, staff: [{name: '정꿈나라', isRep: true, phone: '010-4444-4444', email: 'dream@incheon.kr'}], partners: ['B파트너', 'C파트너'], grade: 'C', products: ['SleepQ'] },
 ];
 
 const allPartners = ['A파트너', 'B파트너', 'C파트너', 'D파트너'];
@@ -13,7 +13,7 @@ export default function AdminDashboard() {
   const [editPopup, setEditPopup] = useState(null);
   const [addPopup, setAddPopup] = useState(false);
   const [confirmPopup, setConfirmPopup] = useState(null);
-  const [newClient, setNewClient] = useState({ name: '', type: 'hospital', portfolio: 'sleepq', address: '', phone: '', email: '', neca: '', isPrescribing: false, staff: [{name: '', isRep: true, phone: '', email: ''}], partners: [] });
+  const [newClient, setNewClient] = useState({ name: '', type: 'hospital', portfolio: 'sleepq', address: '', phone: '', email: '', neca: '', isPrescribing: false, staff: [{name: '', isRep: true, phone: '', email: ''}], partners: [], grade: 'C', products: [] });
 
   const closeAll = () => { setEditPopup(null); setAddPopup(false); setConfirmPopup(null); };
 
@@ -27,6 +27,20 @@ export default function AdminDashboard() {
       setNewClient(prev => ({
         ...prev,
         partners: prev.partners.includes(partner) ? prev.partners.filter(p => p !== partner) : [...prev.partners, partner]
+      }));
+    }
+  };
+
+  const toggleProduct = (client, product, isEdit = false) => {
+    if (isEdit) {
+      setEditPopup(prev => ({
+        ...prev,
+        products: prev.products.includes(product) ? prev.products.filter(p => p !== product) : [...prev.products, product]
+      }));
+    } else {
+      setNewClient(prev => ({
+        ...prev,
+        products: prev.products.includes(product) ? prev.products.filter(p => p !== product) : [...prev.products, product]
       }));
     }
   };
@@ -58,7 +72,7 @@ export default function AdminDashboard() {
 
   const saveNew = () => {
     setClients(prev => [...prev, {...newClient, id: Date.now()}]);
-    setNewClient({ name: '', type: 'hospital', portfolio: 'sleepq', address: '', phone: '', email: '', neca: '', isPrescribing: false, staff: [{name: '', isRep: true, phone: '', email: ''}], partners: [] });
+    setNewClient({ name: '', type: 'hospital', portfolio: 'sleepq', address: '', phone: '', email: '', neca: '', isPrescribing: false, staff: [{name: '', isRep: true, phone: '', email: ''}], partners: [], grade: 'C', products: [] });
     setAddPopup(false);
     setConfirmPopup(null);
   };
@@ -113,6 +127,51 @@ export default function AdminDashboard() {
 
       <div><label style={labelStyle}>거래처 주소</label><input style={inputStyle} value={data.address} onChange={e => setData(prev => ({...prev, address: e.target.value}))} /></div>
       <div><label style={labelStyle}>대표 이메일</label><input style={inputStyle} value={data.email} onChange={e => setData(prev => ({...prev, email: e.target.value}))} /></div>
+
+      {/* 그레이드 */}
+      <div>
+        <label style={labelStyle}>그레이드 *</label>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+          {['A', 'B', 'C', 'D'].map(grade => (
+            <button
+              key={grade}
+              onClick={() => setData(prev => ({...prev, grade}))}
+              style={{
+                padding: '12px',
+                background: data.grade === grade ? '#111827' : '#f9fafb',
+                border: data.grade === grade ? '2px solid #111827' : '1px solid #e5e7eb',
+                borderRadius: '8px',
+                color: data.grade === grade ? '#ffffff' : '#6b7280',
+                cursor: 'pointer',
+                fontSize: '18px',
+                fontWeight: '700',
+                transition: 'all 0.2s'
+              }}
+            >
+              {grade}
+            </button>
+          ))}
+        </div>
+        <p style={{ color: '#9ca3af', fontSize: '11px', marginTop: '6px' }}>A: 월 3회 이상 | B: 월 2회 | C: 월 1회 | D: 필요시</p>
+      </div>
+
+      {/* 제품 선택 */}
+      <div>
+        <label style={labelStyle}>제공 제품 *</label>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+          {data.portfolio === 'sleepq' && (
+            <>
+              <button onClick={() => toggleProduct(data, 'SleepQ', isEdit)} style={{ padding: '8px 16px', background: data.products?.includes('SleepQ') ? '#4338ca' : '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '20px', color: data.products?.includes('SleepQ') ? '#ffffff' : '#6b7280', cursor: 'pointer', fontSize: '13px' }}>SleepQ</button>
+            </>
+          )}
+          {data.portfolio === 'coaching' && (
+            <>
+              <button onClick={() => toggleProduct(data, 'GLP-OP', isEdit)} style={{ padding: '8px 16px', background: data.products?.includes('GLP-OP') ? '#059669' : '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '20px', color: data.products?.includes('GLP-OP') ? '#ffffff' : '#6b7280', cursor: 'pointer', fontSize: '13px' }}>GLP-OP</button>
+              <button onClick={() => toggleProduct(data, 'CGM', isEdit)} style={{ padding: '8px 16px', background: data.products?.includes('CGM') ? '#059669' : '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '20px', color: data.products?.includes('CGM') ? '#ffffff' : '#6b7280', cursor: 'pointer', fontSize: '13px' }}>CGM</button>
+            </>
+          )}
+        </div>
+      </div>
 
       {/* SleepQ 전용 필드 */}
       {data.portfolio === 'sleepq' && (

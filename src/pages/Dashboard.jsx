@@ -148,9 +148,25 @@ export default function ClientDashboard() {
             {/* 의료진 */}
             <div style={{ color: '#38bdf8', cursor: 'pointer' }} onClick={() => setPopup({ type: 'staff', data: c })}>{c.staff}</div>
             {/* 전화번호 */}
-            <div style={{ color: '#6b7280', fontSize: '14px' }}>{c.phone}</div>
+            <div
+              style={{ color: '#3b82f6', fontSize: '14px', cursor: 'pointer', textDecoration: 'underline' }}
+              onClick={() => {
+                navigator.clipboard.writeText(c.phone);
+                alert(`전화번호가 복사되었습니다: ${c.phone}`);
+              }}
+              title="클릭하여 복사"
+            >
+              {c.phone}
+            </div>
             {/* 이메일 */}
-            <div style={{ color: '#6b7280', fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.email}</div>
+            <a
+              href={`mailto:${c.email}`}
+              style={{ color: '#3b82f6', fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', textDecoration: 'none', cursor: 'pointer' }}
+              onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
+              onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}
+            >
+              {c.email}
+            </a>
             {/* 그레이드 */}
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4px' }}>
               <span style={{ fontWeight: '700', fontSize: '16px', color: '#111827', cursor: 'pointer' }} onClick={() => setEditingGrade(c)}>{c.grade}</span>
