@@ -11,7 +11,6 @@ const clients = [
 
 export default function AllClientsDashboard() {
   const [logPopup, setLogPopup] = useState(null);
-  const [smsPopup, setSmsPopup] = useState(null);
   const [filterPortfolio, setFilterPortfolio] = useState('전체');
   const [filterType, setFilterType] = useState('전체');
   const [filterCity, setFilterCity] = useState('전체');
@@ -101,10 +100,9 @@ export default function AllClientsDashboard() {
 
       {/* Table */}
       <div style={{ background: '#ffffff', borderRadius: '16px', border: '1px solid #f3f4f6', overflow: 'hidden' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr 1fr 0.9fr 1.5fr 0.8fr 0.8fr', padding: '16px 24px', background: '#f9fafb', borderBottom: '1px solid #f3f4f6', fontSize: '13px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 2fr 1fr 2fr 1fr 1fr', padding: '16px 24px', background: '#f9fafb', borderBottom: '1px solid #f3f4f6', fontSize: '13px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
           <div>거래처명</div>
           <div>주소</div>
-          <div>전화번호</div>
           <div>의료진</div>
           <div>방문중인 협력사</div>
           <div>최종 방문</div>
@@ -112,15 +110,9 @@ export default function AllClientsDashboard() {
         </div>
 
         {filteredClients.map((c, i) => (
-          <div key={c.id} style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr 1fr 0.9fr 1.5fr 0.8fr 0.8fr', padding: '20px 24px', borderBottom: i < filteredClients.length - 1 ? '1px solid #f3f4f6' : 'none', alignItems: 'center', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = '#f3f4f6'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+          <div key={c.id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 2fr 1fr 2fr 1fr 1fr', padding: '20px 24px', borderBottom: i < filteredClients.length - 1 ? '1px solid #f3f4f6' : 'none', alignItems: 'center', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = '#f3f4f6'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
             <div style={{ fontWeight: '600', color: '#111827' }}>{c.name}</div>
             <div style={{ color: '#6b7280', fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.address}>{c.address}</div>
-            <div
-              style={{ color: '#3b82f6', fontSize: '14px', cursor: 'pointer', textDecoration: 'underline' }}
-              onClick={() => setSmsPopup(c)}
-            >
-              {c.phone}
-            </div>
             <div style={{ color: '#6b7280' }}>{c.staff}</div>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               {c.partners.sort().map((p, j) => (
@@ -148,19 +140,6 @@ export default function AllClientsDashboard() {
                 </div>
               ))}
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* SMS Popup */}
-      {smsPopup && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div style={{ background: '#ffffff', borderRadius: '16px', padding: '32px', width: '450px', border: '1px solid #f3f4f6', position: 'relative' }}>
-            <button onClick={() => setSmsPopup(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#6b7280', fontSize: '24px', cursor: 'pointer' }}>×</button>
-            <h3 style={{ margin: '0 0 8px', color: '#111827' }}>문자 발송</h3>
-            <p style={{ color: '#6b7280', margin: '0 0 24px', fontSize: '14px' }}>{smsPopup.name} · {smsPopup.phone}</p>
-            <textarea placeholder="메시지를 입력하세요..." style={{ width: '100%', height: '120px', background: '#f9fafb', border: '1px solid #f3f4f6', borderRadius: '12px', padding: '16px', color: '#111827', fontSize: '14px', resize: 'none', boxSizing: 'border-box' }} />
-            <button style={{ width: '100%', marginTop: '16px', padding: '14px', background: 'linear-gradient(135deg, #4ade80, #22c55e)', border: 'none', borderRadius: '12px', color: '#f9fafb', fontWeight: '600', cursor: 'pointer', fontSize: '15px' }}>발송하기</button>
           </div>
         </div>
       )}
