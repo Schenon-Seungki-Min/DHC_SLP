@@ -84,16 +84,8 @@ export default function AdminDashboard() {
   };
 
   const handleDownloadExcel = () => {
-    // Mock Excel 다운로드
-    alert('Excel 파일 다운로드 기능 (실제 구현 시 라이브러리 사용 필요)');
-  };
-
-  const handleUploadExcel = (e) => {
-    // Mock Excel 업로드
-    const file = e.target.files[0];
-    if (file) {
-      alert(`Excel 파일 업로드: ${file.name} (실제 구현 시 파싱 로직 필요)`);
-    }
+    // Mock 콜 플랜 다운로드
+    alert('콜 플랜 Excel 다운로드 기능 (실제 구현 시 라이브러리 사용 필요)');
   };
 
   const inputStyle = { width: '100%', background: '#f9fafb', border: '1px solid #f3f4f6', borderRadius: '8px', padding: '10px 12px', color: '#111827', fontSize: '14px', boxSizing: 'border-box' };
@@ -264,12 +256,8 @@ export default function AdminDashboard() {
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
           <button onClick={handleDownloadExcel} style={{ padding: '12px 20px', background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '10px', color: '#111827', fontWeight: '600', cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            📥 Excel 다운로드
+            📥 콜 플랜 다운로드
           </button>
-          <label style={{ padding: '12px 20px', background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '10px', color: '#111827', fontWeight: '600', cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            📤 Excel 업로드
-            <input type="file" accept=".xlsx,.xls" onChange={handleUploadExcel} style={{ display: 'none' }} />
-          </label>
           <button onClick={() => setAddPopup(true)} style={{ padding: '12px 24px', background: 'linear-gradient(135deg, #3b82f6, #2563eb)', border: 'none', borderRadius: '10px', color: '#fff', fontWeight: '600', cursor: 'pointer', fontSize: '14px' }}>+ 거래처 등록</button>
         </div>
       </div>
@@ -277,7 +265,7 @@ export default function AdminDashboard() {
       {/* Table */}
       <div style={{ background: '#ffffff', borderRadius: '16px', border: '1px solid #f3f4f6', overflow: 'hidden' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 2fr 1fr 1fr 1.5fr 80px', padding: '16px 24px', background: '#f9fafb', borderBottom: '1px solid #f3f4f6', fontSize: '13px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-          <div>거래처명</div><div>주소</div><div>의료진</div><div>NECA</div><div>담당 협력사</div><div></div>
+          <div>거래처명</div><div>주소</div><div>의료진</div><div>비고</div><div>담당 협력사</div><div></div>
         </div>
         {clients.map((c, i) => (
           <div key={c.id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 2fr 1fr 1fr 1.5fr 80px', padding: '18px 24px', borderBottom: i < clients.length - 1 ? '1px solid #f3f4f6' : 'none', alignItems: 'center' }}>
