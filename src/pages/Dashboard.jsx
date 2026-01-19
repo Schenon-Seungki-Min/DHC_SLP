@@ -13,6 +13,7 @@ export default function ClientDashboard() {
   const [popup, setPopup] = useState({ type: null, data: null });
   const [smsPopup, setSmsPopup] = useState(null);
   const [schedulePopup, setSchedulePopup] = useState(null);
+  const [memoDetailPopup, setMemoDetailPopup] = useState(null);
   const [newDate, setNewDate] = useState('');
   const [filterPortfolio, setFilterPortfolio] = useState('전체');
   const [filterType, setFilterType] = useState('전체');
@@ -21,7 +22,7 @@ export default function ClientDashboard() {
   const [filterDong, setFilterDong] = useState('전체');
   const [editingGrade, setEditingGrade] = useState(null);
 
-  const closePopup = () => { setPopup({ type: null, data: null }); setSmsPopup(null); setSchedulePopup(null); setEditingGrade(null); };
+  const closePopup = () => { setPopup({ type: null, data: null }); setSmsPopup(null); setSchedulePopup(null); setEditingGrade(null); setMemoDetailPopup(null); };
 
   const updateGrade = (clientId, newGrade) => {
     setClients(prev => prev.map(c => c.id === clientId ? { ...c, grade: newGrade } : c));
@@ -143,18 +144,14 @@ export default function ClientDashboard() {
                 ))}
               </div>
             </div>
-            {/* 주소 (시/구/동) */}
-            <div style={{ color: '#6b7280', fontSize: '14px' }}>{`${c.city} ${c.district} ${c.dong}`}</div>
+            {/* 주소 (전체) */}
+            <div style={{ color: '#6b7280', fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.address}>{c.address}</div>
             {/* 의료진 */}
             <div style={{ color: '#38bdf8', cursor: 'pointer' }} onClick={() => setPopup({ type: 'staff', data: c })}>{c.staff}</div>
             {/* 전화번호 */}
             <div
               style={{ color: '#3b82f6', fontSize: '14px', cursor: 'pointer', textDecoration: 'underline' }}
-              onClick={() => {
-                navigator.clipboard.writeText(c.phone);
-                alert(`전화번호가 복사되었습니다: ${c.phone}`);
-              }}
-              title="클릭하여 복사"
+              onClick={() => setSmsPopup(c)}
             >
               {c.phone}
             </div>
@@ -175,7 +172,7 @@ export default function ClientDashboard() {
             {/* 방문예정일 + 최종방문 */}
             <div style={{ cursor: 'pointer' }} onClick={() => setSchedulePopup(c)}>
               <div style={{ color: c.scheduledVisit ? '#fbbf24' : '#9ca3af', fontSize: '14px', fontWeight: c.scheduledVisit ? '600' : 'normal' }}>{c.scheduledVisit || '-'}</div>
-              <div style={{ color: '#9ca3af', fontSize: '12px', marginTop: '2px' }}>{c.lastVisit}</div>
+              <div style={{ color: '#9ca3af', fontSize: '12px', marginTop: '2px' }}>마지막 방문일: {c.lastVisit}</div>
             </div>
           </div>
         ))}
@@ -289,7 +286,14 @@ export default function ClientDashboard() {
                       <span key={idx} style={{ background: '#e0e7ff', color: '#4338ca', padding: '2px 8px', borderRadius: '8px', fontSize: '11px' }}>{prod}</span>
                     ))}
                   </div>
-                  {p.memo && <p style={{ color: '#6b7280', fontSize: '13px', margin: 0 }}>{p.memo}</p>}
+                  {p.memo && (
+                    <p
+                      style={{ color: '#3b82f6', fontSize: '13px', margin: 0, cursor: 'pointer', textDecoration: 'underline' }}
+                      onClick={() => setMemoDetailPopup({ partner: p.name, date: p.date, memo: p.memo })}
+                    >
+                      {p.memo}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
@@ -361,6 +365,20 @@ export default function ClientDashboard() {
               <p style={{ color: '#9ca3af', fontSize: '12px', margin: 0 }}>
                 A: 월 3회 이상 | B: 월 2회 | C: 월 1회 | D: 필요시
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Nested Memo Detail Popup */}
+      {memoDetailPopup && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
+          <div style={{ background: '#ffffff', borderRadius: '16px', padding: '32px', width: '450px', border: '1px solid #f3f4f6', position: 'relative' }}>
+            <button onClick={() => setMemoDetailPopup(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#6b7280', fontSize: '24px', cursor: 'pointer' }}>×</button>
+            <h3 style={{ margin: '0 0 8px', color: '#111827' }}>방문 메모 상세</h3>
+            <p style={{ color: '#6b7280', margin: '0 0 24px', fontSize: '14px' }}>{memoDetailPopup.partner} · {memoDetailPopup.date}</p>
+            <div style={{ background: '#f9fafb', borderRadius: '12px', padding: '20px', minHeight: '100px' }}>
+              <p style={{ color: '#111827', margin: 0, lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>{memoDetailPopup.memo}</p>
             </div>
           </div>
         </div>

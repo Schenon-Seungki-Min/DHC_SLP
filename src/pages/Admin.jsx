@@ -277,7 +277,7 @@ export default function AdminDashboard() {
       {/* Table */}
       <div style={{ background: '#ffffff', borderRadius: '16px', border: '1px solid #f3f4f6', overflow: 'hidden' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 2fr 1fr 1fr 1.5fr 80px', padding: '16px 24px', background: '#f9fafb', borderBottom: '1px solid #f3f4f6', fontSize: '13px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-          <div>거래처명</div><div>주소</div><div>대표 담당자</div><div>NECA</div><div>담당 협력사</div><div></div>
+          <div>거래처명</div><div>주소</div><div>의료진</div><div>NECA</div><div>담당 협력사</div><div></div>
         </div>
         {clients.map((c, i) => (
           <div key={c.id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 2fr 1fr 1fr 1.5fr 80px', padding: '18px 24px', borderBottom: i < clients.length - 1 ? '1px solid #f3f4f6' : 'none', alignItems: 'center' }}>
