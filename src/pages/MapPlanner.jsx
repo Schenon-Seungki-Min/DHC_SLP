@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const clients = [
   { id: 1, name: '서울수면클리닉', type: 'hospital', portfolio: 'sleepq', address: '서울시 강남구 테헤란로 123', lat: 37.498, lng: 127.028, region: '수도권', isMyClient: true, grade: 'A', scheduledVisit: '2025-01-20', lastVisit: '2024-12-20' },
@@ -131,10 +131,21 @@ export default function MapRoutePlanner() {
   const [filterRegion, setFilterRegion] = useState('전체');
   const [filterPortfolio, setFilterPortfolio] = useState('전체');
   const [filterType, setFilterType] = useState('전체');
-  const [myList, setMyList] = useState([]);
   const [hoveredId, setHoveredId] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]); // 오늘 날짜
-  const [activeTab, setActiveTab] = useState('날짜별'); // '날짜별' or '나만의'
+  const [dailyPlans, setDailyPlans] = useState({}); // { '2025-01-20': [1, 3, 6], ... } - 날짜별 수동 추가된 병원 ID 목록
+
+  // localStorage에서 저장된 일정 불러오기
+  useEffect(() => {
+    const saved = localStorage.getItem('dailyPlans');
+    if (saved) {
+      try {
+        setDailyPlans(JSON.parse(saved));
+      } catch (e) {
+        console.error('Failed to load dailyPlans:', e);
+      }
+    }
+  }, []);
 
   const filtered = clients.filter(c => {
     if (filterRegion !== '전체' && c.region !== filterRegion) return false;
@@ -143,14 +154,59 @@ export default function MapRoutePlanner() {
     return true;
   });
 
-  const toggleList = (c) => setMyList(prev => prev.find(x => x.id === c.id) ? prev.filter(x => x.id !== c.id) : [...prev, c]);
-  const isInList = (id) => myList.some(x => x.id === id);
+  // 선택된 날짜에 병원 추가/제거
+  const toggleDatePlan = (clientId) => {
+    setDailyPlans(prev => {
+      const dateList = prev[selectedDate] || [];
+      const exists = dateList.includes(clientId);
+      if (exists) {
+        // 제거
+        const newList = dateList.filter(id => id !== clientId);
+        if (newList.length === 0) {
+          const { [selectedDate]: _, ...rest } = prev;
+          return rest;
+        }
+        return { ...prev, [selectedDate]: newList };
+      } else {
+        // 추가
+        return { ...prev, [selectedDate]: [...dateList, clientId] };
+      }
+    });
+  };
 
   // 선택된 날짜의 방문 예정 거래처
-  const todayClients = clients.filter(c => c.scheduledVisit === selectedDate);
+  // 1) scheduledVisit으로 자동 추가된 병원들
+  const autoClients = clients.filter(c => c.scheduledVisit === selectedDate);
+  // 2) 수동으로 추가된 병원들
+  const manualClientIds = dailyPlans[selectedDate] || [];
+  const manualClients = clients.filter(c => manualClientIds.includes(c.id) && c.scheduledVisit !== selectedDate);
+  // 3) 합치기
+  const todayClients = [...autoClients, ...manualClients];
 
-  // 달력에 표시할 날짜들 (방문 예정일이 있는 날짜)
-  const visitDates = new Set(clients.filter(c => c.scheduledVisit).map(c => c.scheduledVisit));
+  // 현재 날짜의 리스트에 있는지 확인
+  const isInDatePlan = (id) => {
+    const autoIds = autoClients.map(c => c.id);
+    return autoIds.includes(id) || manualClientIds.includes(id);
+  };
+
+  // 달력에 표시할 날짜들
+  // 1) scheduledVisit이 있는 날짜들
+  const scheduledDates = clients.filter(c => c.scheduledVisit).map(c => c.scheduledVisit);
+  // 2) dailyPlans에 있는 날짜들
+  const planDates = Object.keys(dailyPlans);
+  // 3) 합치기
+  const visitDates = new Set([...scheduledDates, ...planDates]);
+
+  // 방문 일정 확정하기
+  const confirmPlan = () => {
+    if (todayClients.length === 0) {
+      alert('방문 예정인 거래처가 없습니다.');
+      return;
+    }
+    // localStorage에 저장
+    localStorage.setItem('dailyPlans', JSON.stringify(dailyPlans));
+    alert(`${formatDateKorean(selectedDate)} 방문 일정이 확정되었습니다!\n총 ${todayClients.length}개 거래처`);
+  };
 
   // 지도 영역 계산
   const mapBounds = { minLat: 34.5, maxLat: 38.5, minLng: 125.5, maxLng: 130 };
@@ -178,7 +234,7 @@ export default function MapRoutePlanner() {
             <p style={{ color: '#6b7280', marginTop: '4px', fontSize: '14px' }}>방문 계획을 세우세요</p>
           </div>
           <button
-            onClick={() => alert('콜 플랜이 제출되었습니다!')}
+            onClick={confirmPlan}
             style={{
               padding: '12px 24px',
               background: '#3b82f6',
@@ -193,7 +249,7 @@ export default function MapRoutePlanner() {
             onMouseEnter={e => e.currentTarget.style.background = '#2563eb'}
             onMouseLeave={e => e.currentTarget.style.background = '#3b82f6'}
           >
-            콜 플랜 제출하기
+            방문 일정 확정하기
           </button>
         </div>
         {/* Filters */}
@@ -236,14 +292,14 @@ export default function MapRoutePlanner() {
           {/* 마커들 */}
           {filtered.map(c => {
             const pos = toPos(c.lat, c.lng);
-            const inList = isInList(c.id);
+            const inPlan = isInDatePlan(c.id);
             const isHovered = hoveredId === c.id;
             return (
-              <div key={c.id} onClick={() => toggleList(c)} onMouseEnter={() => setHoveredId(c.id)} onMouseLeave={() => setHoveredId(null)}
+              <div key={c.id} onClick={() => toggleDatePlan(c.id)} onMouseEnter={() => setHoveredId(c.id)} onMouseLeave={() => setHoveredId(null)}
                 style={{ position: 'absolute', left: `${pos.x}%`, top: `${pos.y}%`, transform: 'translate(-50%, -50%)', cursor: 'pointer', zIndex: isHovered ? 10 : 1 }}>
                 <div style={{
-                  width: inList ? '28px' : '22px',
-                  height: inList ? '28px' : '22px',
+                  width: inPlan ? '28px' : '22px',
+                  height: inPlan ? '28px' : '22px',
                   borderRadius: '50%',
                   background: '#ffffff',
                   border: c.isMyClient ? '3px solid #111827' : '2px solid #9ca3af',
@@ -252,7 +308,7 @@ export default function MapRoutePlanner() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: inList ? '14px' : '11px',
+                  fontSize: inPlan ? '14px' : '11px',
                   fontWeight: '700',
                   color: '#111827'
                 }}>
@@ -291,119 +347,51 @@ export default function MapRoutePlanner() {
           </div>
         </div>
 
-        {/* Tabbed List Panel */}
-        <div style={{ background: '#ffffff', borderRadius: '16px', border: '1px solid #f3f4f6', height: '600px', display: 'flex', flexDirection: 'column' }}>
-          {/* Tab Headers */}
-          <div style={{ display: 'flex', borderBottom: '1px solid #f3f4f6' }}>
-            <button
-              onClick={() => setActiveTab('날짜별')}
-              style={{
-                flex: 1,
-                padding: '16px',
-                background: 'none',
-                border: 'none',
-                borderBottom: activeTab === '날짜별' ? '2px solid #3b82f6' : '2px solid transparent',
-                color: activeTab === '날짜별' ? '#3b82f6' : '#6b7280',
-                fontWeight: activeTab === '날짜별' ? '600' : 'normal',
-                fontSize: '14px',
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-            >
-              날짜별 방문
-            </button>
-            <button
-              onClick={() => setActiveTab('나만의')}
-              style={{
-                flex: 1,
-                padding: '16px',
-                background: 'none',
-                border: 'none',
-                borderBottom: activeTab === '나만의' ? '2px solid #3b82f6' : '2px solid transparent',
-                color: activeTab === '나만의' ? '#3b82f6' : '#6b7280',
-                fontWeight: activeTab === '나만의' ? '600' : 'normal',
-                fontSize: '14px',
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-            >
-              나만의 리스트
-            </button>
-          </div>
+        {/* Date-based Visit List Panel */}
+        <div style={{ background: '#ffffff', borderRadius: '16px', border: '1px solid #f3f4f6', padding: '24px', height: '600px', display: 'flex', flexDirection: 'column' }}>
+          <h3 style={{ margin: '0 0 4px', color: '#111827', fontSize: '18px' }}>{formatDateKorean(selectedDate)}</h3>
+          <p style={{ color: '#6b7280', fontSize: '13px', margin: '0 0 20px' }}>{todayClients.length}개 방문 예정</p>
 
-          {/* Tab Content */}
-          <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column' }}>
-            {activeTab === '날짜별' ? (
-              <>
-                <h3 style={{ margin: '0 0 4px', color: '#111827', fontSize: '18px' }}>{formatDateKorean(selectedDate)}</h3>
-                <p style={{ color: '#6b7280', fontSize: '13px', margin: '0 0 20px' }}>{todayClients.length}개 방문 예정</p>
-
-                <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {todayClients.length === 0 ? (
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', fontSize: '14px', textAlign: 'center' }}>
-                      이 날짜에<br/>방문 예정인 거래처가<br/>없습니다
-                    </div>
-                  ) : (
-                    todayClients.map((c, i) => (
-                      <div key={c.id} style={{ background: '#f9fafb', borderRadius: '12px', padding: '14px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                          <span style={{ background: '#4ade80', color: '#f9fafb', width: '20px', height: '20px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '700' }}>{i + 1}</span>
-                          <span style={{ color: '#111827', fontWeight: '600', fontSize: '14px' }}>{c.name}</span>
-                        </div>
-                        <div style={{ color: '#6b7280', fontSize: '12px', marginLeft: '28px', marginBottom: '6px' }}>{c.address}</div>
-                        <div style={{ marginLeft: '28px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
-                            <span style={{ color: '#6b7280' }}>방문 예정일</span>
-                            <span style={{ color: '#fbbf24', fontWeight: '600' }}>{c.scheduledVisit || '-'}</span>
-                          </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
-                            <span style={{ color: '#6b7280' }}>마지막 방문일</span>
-                            <span style={{ color: '#38bdf8', fontWeight: '600' }}>{c.lastVisit}</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {todayClients.length === 0 ? (
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', fontSize: '14px', textAlign: 'center' }}>
+                이 날짜에<br/>방문 예정인 거래처가<br/>없습니다<br/><br/>
+                지도에서 병원을 클릭하거나<br/>대시보드에서 방문일을 설정하세요
+              </div>
             ) : (
-              <>
-                <h3 style={{ margin: '0 0 4px', color: '#111827', fontSize: '18px' }}>나만의 리스트</h3>
-                <p style={{ color: '#6b7280', fontSize: '13px', margin: '0 0 20px' }}>{myList.length}개 선택됨</p>
-
-                <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {myList.length === 0 ? (
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', fontSize: '14px', textAlign: 'center' }}>
-                      지도에서 병원을 클릭하여<br/>나만의 리스트를 만드세요
+              todayClients.map((c, i) => (
+                <div key={c.id} style={{ background: '#f9fafb', borderRadius: '12px', padding: '14px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                    <span style={{
+                      background: c.scheduledVisit === selectedDate ? '#fbbf24' : '#4ade80',
+                      color: '#f9fafb',
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '11px',
+                      fontWeight: '700'
+                    }}>{i + 1}</span>
+                    <span style={{ color: '#111827', fontWeight: '600', fontSize: '14px' }}>{c.name}</span>
+                    {c.scheduledVisit === selectedDate && (
+                      <span style={{ fontSize: '10px', color: '#fbbf24', background: '#fef3c7', padding: '2px 6px', borderRadius: '6px' }}>예약</span>
+                    )}
+                  </div>
+                  <div style={{ color: '#6b7280', fontSize: '12px', marginLeft: '28px', marginBottom: '6px' }}>{c.address}</div>
+                  <div style={{ marginLeft: '28px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
+                      <span style={{ color: '#6b7280' }}>방문 예정일</span>
+                      <span style={{ color: '#fbbf24', fontWeight: '600' }}>{c.scheduledVisit || '-'}</span>
                     </div>
-                  ) : (
-                    myList.map((c, i) => (
-                      <div key={c.id} style={{ background: '#f9fafb', borderRadius: '12px', padding: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                            <span style={{ background: '#3b82f6', color: '#ffffff', width: '20px', height: '20px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '700' }}>{i + 1}</span>
-                            <span style={{ color: '#111827', fontWeight: '600', fontSize: '14px' }}>{c.name}</span>
-                          </div>
-                          <div style={{ color: '#6b7280', fontSize: '12px', marginLeft: '28px' }}>{c.address}</div>
-                        </div>
-                        <button
-                          onClick={() => toggleList(c)}
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            color: '#ef4444',
-                            cursor: 'pointer',
-                            fontSize: '18px',
-                            padding: '4px 8px'
-                          }}
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))
-                  )}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
+                      <span style={{ color: '#6b7280' }}>마지막 방문일</span>
+                      <span style={{ color: '#38bdf8', fontWeight: '600' }}>{c.lastVisit}</span>
+                    </div>
+                  </div>
                 </div>
-              </>
+              ))
             )}
           </div>
         </div>
