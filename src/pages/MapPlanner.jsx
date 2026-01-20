@@ -134,6 +134,7 @@ export default function MapRoutePlanner() {
   const [hoveredId, setHoveredId] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]); // 오늘 날짜
   const [dailyPlans, setDailyPlans] = useState({}); // { '2025-01-20': [1, 3, 6], ... } - 날짜별 수동 추가된 병원 ID 목록
+  const [confirmedDates, setConfirmedDates] = useState(new Set()); // 확정된 날짜들
 
   // localStorage에서 저장된 일정 불러오기
   useEffect(() => {
@@ -143,6 +144,15 @@ export default function MapRoutePlanner() {
         setDailyPlans(JSON.parse(saved));
       } catch (e) {
         console.error('Failed to load dailyPlans:', e);
+      }
+    }
+
+    const savedConfirmed = localStorage.getItem('confirmedDates');
+    if (savedConfirmed) {
+      try {
+        setConfirmedDates(new Set(JSON.parse(savedConfirmed)));
+      } catch (e) {
+        console.error('Failed to load confirmedDates:', e);
       }
     }
   }, []);
@@ -197,6 +207,9 @@ export default function MapRoutePlanner() {
   // 3) 합치기
   const visitDates = new Set([...scheduledDates, ...planDates]);
 
+  // 현재 날짜가 확정되었는지 확인
+  const isDateConfirmed = confirmedDates.has(selectedDate);
+
   // 방문 일정 확정하기
   const confirmPlan = () => {
     if (todayClients.length === 0) {
@@ -205,7 +218,20 @@ export default function MapRoutePlanner() {
     }
     // localStorage에 저장
     localStorage.setItem('dailyPlans', JSON.stringify(dailyPlans));
-    alert(`${formatDateKorean(selectedDate)} 방문 일정이 확정되었습니다!\n총 ${todayClients.length}개 거래처`);
+
+    // 확정 날짜에 추가
+    const newConfirmed = new Set(confirmedDates);
+    newConfirmed.add(selectedDate);
+    setConfirmedDates(newConfirmed);
+    localStorage.setItem('confirmedDates', JSON.stringify([...newConfirmed]));
+  };
+
+  // 방문 일정 수정하기
+  const editPlan = () => {
+    const newConfirmed = new Set(confirmedDates);
+    newConfirmed.delete(selectedDate);
+    setConfirmedDates(newConfirmed);
+    localStorage.setItem('confirmedDates', JSON.stringify([...newConfirmed]));
   };
 
   // 지도 영역 계산
@@ -233,24 +259,6 @@ export default function MapRoutePlanner() {
             <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#111827', margin: 0 }}>콜플랜</h1>
             <p style={{ color: '#6b7280', marginTop: '4px', fontSize: '14px' }}>방문 계획을 세우세요</p>
           </div>
-          <button
-            onClick={confirmPlan}
-            style={{
-              padding: '12px 24px',
-              background: '#3b82f6',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '12px',
-              fontSize: '14px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              transition: 'all 0.2s'
-            }}
-            onMouseEnter={e => e.currentTarget.style.background = '#2563eb'}
-            onMouseLeave={e => e.currentTarget.style.background = '#3b82f6'}
-          >
-            방문 일정 확정하기
-          </button>
         </div>
         {/* Filters */}
         <div style={{ display: 'flex', gap: '12px' }}>
@@ -348,11 +356,11 @@ export default function MapRoutePlanner() {
         </div>
 
         {/* Date-based Visit List Panel */}
-        <div style={{ background: '#ffffff', borderRadius: '16px', border: '1px solid #f3f4f6', padding: '24px', height: '600px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ background: '#ffffff', borderRadius: '16px', border: '1px solid #f3f4f6', padding: '24px', height: '600px', display: 'flex', flexDirection: 'column', position: 'relative' }}>
           <h3 style={{ margin: '0 0 4px', color: '#111827', fontSize: '18px' }}>{formatDateKorean(selectedDate)}</h3>
           <p style={{ color: '#6b7280', fontSize: '13px', margin: '0 0 20px' }}>{todayClients.length}개 방문 예정</p>
 
-          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
             {todayClients.length === 0 ? (
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', fontSize: '14px', textAlign: 'center' }}>
                 이 날짜에<br/>방문 예정인 거래처가<br/>없습니다<br/><br/>
@@ -360,7 +368,30 @@ export default function MapRoutePlanner() {
               </div>
             ) : (
               todayClients.map((c, i) => (
-                <div key={c.id} style={{ background: '#f9fafb', borderRadius: '12px', padding: '14px' }}>
+                <div key={c.id} style={{ background: '#f9fafb', borderRadius: '12px', padding: '14px', position: 'relative' }}>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleDatePlan(c.id);
+                    }}
+                    style={{
+                      position: 'absolute',
+                      top: '8px',
+                      right: '8px',
+                      background: 'none',
+                      border: 'none',
+                      color: '#9ca3af',
+                      cursor: 'pointer',
+                      fontSize: '18px',
+                      padding: '4px',
+                      lineHeight: '1',
+                      transition: 'color 0.2s'
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
+                    onMouseLeave={e => e.currentTarget.style.color = '#9ca3af'}
+                  >
+                    ×
+                  </button>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                     <span style={{
                       background: c.scheduledVisit === selectedDate ? '#fbbf24' : '#4ade80',
@@ -394,6 +425,74 @@ export default function MapRoutePlanner() {
               ))
             )}
           </div>
+
+          {/* 확정/수정 버튼 */}
+          <button
+            onClick={isDateConfirmed ? editPlan : confirmPlan}
+            disabled={todayClients.length === 0}
+            style={{
+              width: '100%',
+              padding: '14px',
+              background: isDateConfirmed ? '#10b981' : '#3b82f6',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '12px',
+              fontSize: '15px',
+              fontWeight: '600',
+              cursor: todayClients.length === 0 ? 'not-allowed' : 'pointer',
+              opacity: todayClients.length === 0 ? 0.5 : 1,
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={e => {
+              if (todayClients.length > 0) {
+                e.currentTarget.style.background = isDateConfirmed ? '#059669' : '#2563eb';
+              }
+            }}
+            onMouseLeave={e => {
+              if (todayClients.length > 0) {
+                e.currentTarget.style.background = isDateConfirmed ? '#10b981' : '#3b82f6';
+              }
+            }}
+          >
+            {isDateConfirmed ? '✓ 방문 일정 수정하기' : '방문 일정 확정하기'}
+          </button>
+
+          {/* 확정 완료 레이어 이펙트 */}
+          {isDateConfirmed && (
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(16, 185, 129, 0.1)',
+              borderRadius: '16px',
+              pointerEvents: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <div style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                background: '#10b981',
+                color: '#ffffff',
+                padding: '16px 32px',
+                borderRadius: '12px',
+                fontSize: '16px',
+                fontWeight: '600',
+                boxShadow: '0 4px 20px rgba(16, 185, 129, 0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <span style={{ fontSize: '24px' }}>✓</span>
+                <span>일정 확정 완료</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Calendar Panel */}
