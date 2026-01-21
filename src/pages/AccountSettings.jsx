@@ -1,13 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function AccountSettings() {
-  const [userData, setUserData] = useState({
-    name: '홍길동',
-    company: '(주)DHC',
-    phone: '010-1234-5678',
-    email: 'hong@example.com',
-    address: '서울시 강남구'
+  const [userData, setUserData] = useState(() => {
+    const saved = localStorage.getItem('userAccount');
+    return saved ? JSON.parse(saved) : {
+      name: '홍길동',
+      company: '(주)DHC',
+      phone: '010-1234-5678',
+      email: 'hong@example.com',
+      address: '서울시 강남구'
+    };
   });
+
+  // localStorage에 사용자 정보 저장
+  useEffect(() => {
+    localStorage.setItem('userAccount', JSON.stringify(userData));
+  }, [userData]);
 
   const [editMode, setEditMode] = useState({
     phone: false,

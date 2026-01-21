@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const initialClients = [
   { id: 1, name: '서울수면클리닉', type: 'hospital', portfolio: 'sleepq', address: '서울시 강남구 테헤란로 123, 5층 501호', city: '서울시', district: '강남구', dong: '테헤란로', staff: '김수면', otherStaff: ['이진료', '박상담'], phone: '010-1234-5678', email: 'seoul@sleep.kr', lastVisit: '2024-12-20', scheduledVisit: '2025-01-15', grade: 'A', memo: 'NECA 등록 완료. 처방 안정적', memoIsPublic: true, notes: 'NECA 등록일: 2024-06-15\n처방중', products: ['SleepQ'], partners: [{name: 'A파트너', date: '2024-12-20', products: ['SleepQ'], memo: '제품 설명 완료'}, {name: 'B파트너', date: '2024-12-18', products: ['SleepQ'], memo: '샘플 전달'}] },
@@ -64,6 +64,16 @@ export default function ClientDashboard() {
   const [filterDistrict, setFilterDistrict] = useState('전체');
   const [filterDong, setFilterDong] = useState('전체');
   const [editingGrade, setEditingGrade] = useState(null);
+  const [senderPhone, setSenderPhone] = useState('010-0000-0000');
+
+  // localStorage에서 사용자 정보 불러오기
+  useEffect(() => {
+    const userAccount = localStorage.getItem('userAccount');
+    if (userAccount) {
+      const userData = JSON.parse(userAccount);
+      setSenderPhone(userData.phone || '010-0000-0000');
+    }
+  }, []);
 
   const closePopup = () => { setPopup({ type: null, data: null }); setSmsPopup(null); setSchedulePopup(null); setEditingGrade(null); setMemoDetailPopup(null); };
 
@@ -306,9 +316,21 @@ export default function ClientDashboard() {
           <div style={{ background: '#ffffff', borderRadius: '16px', padding: '32px', width: '450px', border: '1px solid #f3f4f6', position: 'relative' }}>
             <button onClick={closePopup} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#6b7280', fontSize: '24px', cursor: 'pointer' }}>×</button>
             <h3 style={{ margin: '0 0 8px', color: '#111827' }}>문자 발송</h3>
-            <p style={{ color: '#6b7280', margin: '0 0 24px', fontSize: '14px' }}>{smsPopup.name} · {smsPopup.phone}</p>
+            <p style={{ color: '#6b7280', margin: '0 0 4px', fontSize: '14px' }}>수신: {smsPopup.name} · {smsPopup.phone}</p>
+            <p style={{ color: '#3b82f6', margin: '0 0 20px', fontSize: '13px', fontWeight: '500' }}>발신: {senderPhone}</p>
             <textarea placeholder="메시지를 입력하세요..." style={{ width: '100%', height: '120px', background: '#f9fafb', border: '1px solid #f3f4f6', borderRadius: '12px', padding: '16px', color: '#111827', fontSize: '14px', resize: 'none', boxSizing: 'border-box' }} />
-            <button style={{ width: '100%', marginTop: '16px', padding: '14px', background: 'linear-gradient(135deg, #4ade80, #22c55e)', border: 'none', borderRadius: '12px', color: '#f9fafb', fontWeight: '600', cursor: 'pointer', fontSize: '15px' }}>발송하기</button>
+            <button
+              style={{ width: '100%', marginTop: '16px', padding: '14px', background: 'linear-gradient(135deg, #4ade80, #22c55e)', border: 'none', borderRadius: '12px', color: '#f9fafb', fontWeight: '600', cursor: 'pointer', fontSize: '15px' }}
+              onClick={() => {
+                // TODO: 서버 연동 시 SMS 발송 API 호출
+                // POST /api/sms/send
+                // { to: smsPopup.phone, from: senderPhone, message: textarea.value }
+                alert('문자 발송 기능은 서버 연동 후 사용 가능합니다.');
+                closePopup();
+              }}
+            >
+              발송하기
+            </button>
           </div>
         </div>
       )}
