@@ -13,9 +13,18 @@ export default function AdminDashboard() {
   const [editPopup, setEditPopup] = useState(null);
   const [addPopup, setAddPopup] = useState(false);
   const [confirmPopup, setConfirmPopup] = useState(null);
+  const [portfolioManagePopup, setPortfolioManagePopup] = useState(false);
   const [newClient, setNewClient] = useState({ name: '', type: 'hospital', portfolio: 'sleepq', address: '', phone: '', email: '', neca: '', isPrescribing: false, staff: [{name: '', isRep: true, phone: '', email: ''}], partners: [], grade: 'C', products: [] });
 
-  const closeAll = () => { setEditPopup(null); setAddPopup(false); setConfirmPopup(null); };
+  // 포트폴리오 및 제품 관리
+  const [portfolios, setPortfolios] = useState([
+    { id: 'sleepq', name: 'SleepQ', products: ['SleepQ'] },
+    { id: 'coaching', name: '코칭서비스', products: ['GLP-OP', 'CGM'] }
+  ]);
+  const [newPortfolioName, setNewPortfolioName] = useState('');
+  const [editingPortfolio, setEditingPortfolio] = useState(null);
+
+  const closeAll = () => { setEditPopup(null); setAddPopup(false); setConfirmPopup(null); setPortfolioManagePopup(false); };
 
   const togglePartner = (client, partner, isEdit = false) => {
     if (isEdit) {
@@ -43,6 +52,30 @@ export default function AdminDashboard() {
         products: prev.products.includes(product) ? prev.products.filter(p => p !== product) : [...prev.products, product]
       }));
     }
+  };
+
+  // 포트폴리오 관리 함수들
+  const addPortfolio = () => {
+    if (!newPortfolioName.trim()) return;
+    const id = newPortfolioName.toLowerCase().replace(/\s+/g, '_');
+    setPortfolios(prev => [...prev, { id, name: newPortfolioName, products: [] }]);
+    setNewPortfolioName('');
+  };
+
+  const deletePortfolio = (id) => {
+    setPortfolios(prev => prev.filter(p => p.id !== id));
+  };
+
+  const addProductToPortfolio = (portfolioId, productName) => {
+    setPortfolios(prev => prev.map(p =>
+      p.id === portfolioId ? { ...p, products: [...p.products, productName] } : p
+    ));
+  };
+
+  const removeProductFromPortfolio = (portfolioId, productName) => {
+    setPortfolios(prev => prev.map(p =>
+      p.id === portfolioId ? { ...p, products: p.products.filter(prod => prod !== productName) } : p
+    ));
   };
 
   const addStaff = (isEdit = false) => {
@@ -91,7 +124,7 @@ export default function AdminDashboard() {
   const inputStyle = { width: '100%', background: '#f9fafb', border: '1px solid #f3f4f6', borderRadius: '8px', padding: '10px 12px', color: '#111827', fontSize: '14px', boxSizing: 'border-box' };
   const labelStyle = { color: '#6b7280', fontSize: '12px', marginBottom: '6px', display: 'block' };
 
-  const ClientForm = ({ data, setData, isEdit }) => (
+  const ClientForm = ({ data, setData, isEdit, portfolios, setPortfolioManagePopup, toggleProduct }) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '60vh', overflowY: 'auto', paddingRight: '8px' }}>
       {/* 기본 정보 */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -110,10 +143,55 @@ export default function AdminDashboard() {
         </div>
         <div>
           <label style={labelStyle}>포트폴리오 *</label>
-          <select style={inputStyle} value={data.portfolio || 'sleepq'} onChange={e => setData(prev => ({...prev, portfolio: e.target.value}))}>
-            <option value="sleepq">SleepQ</option>
-            <option value="coaching">코칭서비스</option>
-          </select>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <select style={{...inputStyle, flex: 1}} value={data.portfolio || 'sleepq'} onChange={e => setData(prev => ({...prev, portfolio: e.target.value}))}>
+              {portfolios.map(p => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => setPortfolioManagePopup(true)}
+              type="button"
+              style={{
+                padding: '10px 16px',
+                background: '#f9fafb',
+                border: '1px solid #e5e7eb',
+                borderRadius: '8px',
+                color: '#6b7280',
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: '600',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              관리
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 제공 제품 */}
+      <div>
+        <label style={labelStyle}>제공 제품 *</label>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+          {portfolios.find(p => p.id === data.portfolio)?.products.map(product => (
+            <button
+              key={product}
+              type="button"
+              onClick={() => toggleProduct(data, product, isEdit)}
+              style={{
+                padding: '8px 16px',
+                background: data.products?.includes(product) ? '#4338ca' : '#f9fafb',
+                border: '1px solid #e5e7eb',
+                borderRadius: '20px',
+                color: data.products?.includes(product) ? '#ffffff' : '#6b7280',
+                cursor: 'pointer',
+                fontSize: '13px'
+              }}
+            >
+              {product}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -127,6 +205,7 @@ export default function AdminDashboard() {
           {['A', 'B', 'C', 'D'].map(grade => (
             <button
               key={grade}
+              type="button"
               onClick={() => setData(prev => ({...prev, grade}))}
               style={{
                 padding: '12px',
@@ -145,24 +224,6 @@ export default function AdminDashboard() {
           ))}
         </div>
         <p style={{ color: '#9ca3af', fontSize: '11px', marginTop: '6px' }}>A: 월 3회 이상 | B: 월 2회 | C: 월 1회 | D: 필요시</p>
-      </div>
-
-      {/* 제품 선택 */}
-      <div>
-        <label style={labelStyle}>제공 제품 *</label>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-          {data.portfolio === 'sleepq' && (
-            <>
-              <button onClick={() => toggleProduct(data, 'SleepQ', isEdit)} style={{ padding: '8px 16px', background: data.products?.includes('SleepQ') ? '#4338ca' : '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '20px', color: data.products?.includes('SleepQ') ? '#ffffff' : '#6b7280', cursor: 'pointer', fontSize: '13px' }}>SleepQ</button>
-            </>
-          )}
-          {data.portfolio === 'coaching' && (
-            <>
-              <button onClick={() => toggleProduct(data, 'GLP-OP', isEdit)} style={{ padding: '8px 16px', background: data.products?.includes('GLP-OP') ? '#059669' : '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '20px', color: data.products?.includes('GLP-OP') ? '#ffffff' : '#6b7280', cursor: 'pointer', fontSize: '13px' }}>GLP-OP</button>
-              <button onClick={() => toggleProduct(data, 'CGM', isEdit)} style={{ padding: '8px 16px', background: data.products?.includes('CGM') ? '#059669' : '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '20px', color: data.products?.includes('CGM') ? '#ffffff' : '#6b7280', cursor: 'pointer', fontSize: '13px' }}>CGM</button>
-            </>
-          )}
-        </div>
       </div>
 
       {/* SleepQ 전용 필드 */}
@@ -184,23 +245,6 @@ export default function AdminDashboard() {
         <>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <div>
-              <label style={labelStyle}>전문분야</label>
-              <select style={inputStyle} value={data.specialty || 'obesity'} onChange={e => setData(prev => ({...prev, specialty: e.target.value}))}>
-                <option value="obesity">비만</option>
-                <option value="diabetes">당뇨</option>
-                <option value="both">비만+당뇨</option>
-              </select>
-            </div>
-            <div>
-              <label style={labelStyle}>담당팀</label>
-              <select style={inputStyle} value={data.team || 'south_east'} onChange={e => setData(prev => ({...prev, team: e.target.value}))}>
-                <option value="south_east">남동팀</option>
-                <option value="north">북부팀</option>
-              </select>
-            </div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            <div>
               <label style={labelStyle}>서비스 유형</label>
               <select style={inputStyle} value={data.serviceType || 'glpop'} onChange={e => setData(prev => ({...prev, serviceType: e.target.value}))}>
                 <option value="glpop">GLP-OP</option>
@@ -208,7 +252,7 @@ export default function AdminDashboard() {
               </select>
             </div>
             <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-              <button onClick={() => setData(prev => ({...prev, cgmBarozen: !prev.cgmBarozen}))} style={{ padding: '10px 16px', background: data.cgmBarozen ? '#4ade80' : '#f3f4f6', border: 'none', borderRadius: '8px', color: data.cgmBarozen ? '#f9fafb' : '#6b7280', cursor: 'pointer', fontSize: '13px', fontWeight: '600', width: '100%' }}>
+              <button type="button" onClick={() => setData(prev => ({...prev, cgmBarozen: !prev.cgmBarozen}))} style={{ padding: '10px 16px', background: data.cgmBarozen ? '#4ade80' : '#f3f4f6', border: 'none', borderRadius: '8px', color: data.cgmBarozen ? '#f9fafb' : '#6b7280', cursor: 'pointer', fontSize: '13px', fontWeight: '600', width: '100%' }}>
                 CGM 바로젠 구매 {data.cgmBarozen ? 'O' : 'X'}
               </button>
             </div>
@@ -218,15 +262,15 @@ export default function AdminDashboard() {
 
       <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <label style={{...labelStyle, margin: 0}}>소속 담당자</label>
-          <button onClick={() => addStaff(isEdit)} style={{ background: 'none', border: '1px solid #3b82f6', color: '#3b82f6', padding: '4px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>+ 추가</button>
+          <label style={{...labelStyle, margin: 0}}>HCP</label>
+          <button type="button" onClick={() => addStaff(isEdit)} style={{ background: 'none', border: '1px solid #3b82f6', color: '#3b82f6', padding: '4px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>+ 추가</button>
         </div>
         {data.staff.map((member, i) => (
           <div key={i} style={{ background: '#f9fafb', borderRadius: '10px', padding: '12px', marginBottom: '8px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '8px', marginBottom: '8px' }}>
               <input placeholder="이름" style={{...inputStyle, background: '#ffffff'}} value={member.name} onChange={e => updateStaff(i, 'name', e.target.value, isEdit)} />
               <input placeholder="연락처" style={{...inputStyle, background: '#ffffff'}} value={member.phone} onChange={e => updateStaff(i, 'phone', e.target.value, isEdit)} />
-              <button onClick={() => updateStaff(i, 'isRep', !member.isRep, isEdit)} style={{ padding: '8px 12px', background: member.isRep ? '#38bdf8' : '#f3f4f6', border: 'none', borderRadius: '6px', color: member.isRep ? '#f9fafb' : '#6b7280', cursor: 'pointer', fontSize: '11px', whiteSpace: 'nowrap' }}>
+              <button type="button" onClick={() => updateStaff(i, 'isRep', !member.isRep, isEdit)} style={{ padding: '8px 12px', background: member.isRep ? '#38bdf8' : '#f3f4f6', border: 'none', borderRadius: '6px', color: member.isRep ? '#f9fafb' : '#6b7280', cursor: 'pointer', fontSize: '11px', whiteSpace: 'nowrap' }}>
                 {member.isRep ? '대표' : '일반'}
               </button>
             </div>
@@ -239,7 +283,7 @@ export default function AdminDashboard() {
         <label style={labelStyle}>담당 협력사</label>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
           {allPartners.map(p => (
-            <button key={p} onClick={() => togglePartner(data, p, isEdit)} style={{ padding: '8px 16px', background: data.partners.includes(p) ? '#3b82f6' : '#f9fafb', border: '1px solid #f3f4f6', borderRadius: '20px', color: data.partners.includes(p) ? '#fff' : '#6b7280', cursor: 'pointer', fontSize: '13px' }}>{p}</button>
+            <button key={p} type="button" onClick={() => togglePartner(data, p, isEdit)} style={{ padding: '8px 16px', background: data.partners.includes(p) ? '#3b82f6' : '#f9fafb', border: '1px solid #f3f4f6', borderRadius: '20px', color: data.partners.includes(p) ? '#fff' : '#6b7280', cursor: 'pointer', fontSize: '13px' }}>{p}</button>
           ))}
         </div>
       </div>
@@ -290,7 +334,7 @@ export default function AdminDashboard() {
           <div style={{ background: '#ffffff', borderRadius: '16px', padding: '32px', width: '560px', border: '1px solid #f3f4f6', position: 'relative' }}>
             <button onClick={closeAll} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#6b7280', fontSize: '24px', cursor: 'pointer' }}>×</button>
             <h3 style={{ margin: '0 0 24px', color: '#111827' }}>거래처 등록</h3>
-            <ClientForm data={newClient} setData={setNewClient} isEdit={false} />
+            <ClientForm data={newClient} setData={setNewClient} isEdit={false} portfolios={portfolios} setPortfolioManagePopup={setPortfolioManagePopup} toggleProduct={toggleProduct} />
             <button onClick={() => setConfirmPopup({ type: 'add', action: saveNew })} style={{ width: '100%', marginTop: '20px', padding: '14px', background: 'linear-gradient(135deg, #3b82f6, #2563eb)', border: 'none', borderRadius: '10px', color: '#fff', fontWeight: '600', cursor: 'pointer' }}>등록하기</button>
           </div>
         </div>
@@ -302,7 +346,7 @@ export default function AdminDashboard() {
           <div style={{ background: '#ffffff', borderRadius: '16px', padding: '32px', width: '560px', border: '1px solid #f3f4f6', position: 'relative' }}>
             <button onClick={closeAll} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#6b7280', fontSize: '24px', cursor: 'pointer' }}>×</button>
             <h3 style={{ margin: '0 0 24px', color: '#111827' }}>거래처 수정</h3>
-            <ClientForm data={editPopup} setData={setEditPopup} isEdit={true} />
+            <ClientForm data={editPopup} setData={setEditPopup} isEdit={true} portfolios={portfolios} setPortfolioManagePopup={setPortfolioManagePopup} toggleProduct={toggleProduct} />
             <button onClick={() => setConfirmPopup({ type: 'edit', action: saveEdit })} style={{ width: '100%', marginTop: '20px', padding: '14px', background: 'linear-gradient(135deg, #4ade80, #22c55e)', border: 'none', borderRadius: '10px', color: '#f9fafb', fontWeight: '600', cursor: 'pointer' }}>저장하기</button>
           </div>
         </div>
@@ -326,6 +370,147 @@ export default function AdminDashboard() {
               <button onClick={confirmPopup.action} style={{ flex: 1, padding: '12px', background: confirmPopup.type === 'add' ? 'linear-gradient(135deg, #3b82f6, #2563eb)' : 'linear-gradient(135deg, #4ade80, #22c55e)', border: 'none', borderRadius: '10px', color: '#ffffff', fontWeight: '600', cursor: 'pointer', fontSize: '14px' }}>
                 {confirmPopup.type === 'add' ? '등록' : '저장'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Portfolio Management Popup */}
+      {portfolioManagePopup && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 150 }}>
+          <div style={{ background: '#ffffff', borderRadius: '16px', padding: '32px', width: '600px', maxHeight: '80vh', overflowY: 'auto', border: '1px solid #f3f4f6', position: 'relative' }}>
+            <button onClick={() => setPortfolioManagePopup(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#6b7280', fontSize: '24px', cursor: 'pointer' }}>×</button>
+            <h3 style={{ margin: '0 0 24px', color: '#111827' }}>포트폴리오 관리</h3>
+
+            {/* 포트폴리오 목록 */}
+            <div style={{ marginBottom: '24px' }}>
+              {portfolios.map(portfolio => (
+                <div key={portfolio.id} style={{ background: '#f9fafb', borderRadius: '12px', padding: '20px', marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                    <h4 style={{ margin: 0, color: '#111827', fontSize: '16px', fontWeight: '600' }}>{portfolio.name}</h4>
+                    <button
+                      onClick={() => deletePortfolio(portfolio.id)}
+                      style={{
+                        background: '#fee2e2',
+                        border: 'none',
+                        borderRadius: '6px',
+                        color: '#ef4444',
+                        padding: '6px 12px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontWeight: '600'
+                      }}
+                    >
+                      삭제
+                    </button>
+                  </div>
+
+                  {/* 포트폴리오별 제품 목록 */}
+                  <div style={{ marginBottom: '12px' }}>
+                    <label style={{...labelStyle, marginBottom: '8px'}}>제공 제품</label>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
+                      {portfolio.products.map(product => (
+                        <div key={product} style={{ background: '#ffffff', padding: '6px 12px', borderRadius: '20px', border: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ color: '#111827', fontSize: '13px' }}>{product}</span>
+                          <button
+                            onClick={() => removeProductFromPortfolio(portfolio.id, product)}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: '#ef4444',
+                              cursor: 'pointer',
+                              padding: '0',
+                              fontSize: '14px',
+                              lineHeight: '1'
+                            }}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* 제품 추가 */}
+                    {editingPortfolio === portfolio.id ? (
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <input
+                          placeholder="제품명 입력"
+                          style={{...inputStyle, flex: 1}}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter' && e.target.value.trim()) {
+                              addProductToPortfolio(portfolio.id, e.target.value.trim());
+                              e.target.value = '';
+                              setEditingPortfolio(null);
+                            }
+                          }}
+                        />
+                        <button
+                          onClick={() => setEditingPortfolio(null)}
+                          style={{
+                            padding: '10px 16px',
+                            background: '#f3f4f6',
+                            border: 'none',
+                            borderRadius: '8px',
+                            color: '#6b7280',
+                            cursor: 'pointer',
+                            fontSize: '13px'
+                          }}
+                        >
+                          취소
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setEditingPortfolio(portfolio.id)}
+                        style={{
+                          background: 'none',
+                          border: '1px dashed #d1d5db',
+                          borderRadius: '8px',
+                          color: '#6b7280',
+                          padding: '8px 12px',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          width: '100%'
+                        }}
+                      >
+                        + 제품 추가
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* 새 포트폴리오 추가 */}
+            <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: '20px' }}>
+              <label style={{...labelStyle, marginBottom: '8px'}}>새 포트폴리오 추가</label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  placeholder="포트폴리오명 입력"
+                  value={newPortfolioName}
+                  onChange={e => setNewPortfolioName(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') addPortfolio();
+                  }}
+                  style={{...inputStyle, flex: 1}}
+                />
+                <button
+                  onClick={addPortfolio}
+                  style={{
+                    padding: '10px 20px',
+                    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: '#ffffff',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  추가
+                </button>
+              </div>
             </div>
           </div>
         </div>
