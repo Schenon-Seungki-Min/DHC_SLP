@@ -4,10 +4,12 @@ import { AuthProvider } from './contexts/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
 import Layout from './components/Layout';
 import Login from './pages/Login';
+import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import AllHospitals from './pages/AllHospitals';
 import MapPlanner from './pages/MapPlanner';
 import Admin from './pages/Admin';
+import AccountSettings from './pages/AccountSettings';
 
 function App() {
   return (
@@ -15,6 +17,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
 
           <Route path="/dashboard" element={
             <PrivateRoute>
@@ -37,6 +40,12 @@ function App() {
           <Route path="/admin" element={
             <PrivateRoute adminOnly>
               <Layout><Admin /></Layout>
+            </PrivateRoute>
+          } />
+
+          <Route path="/account-settings" element={
+            <PrivateRoute>
+              <Layout><AccountSettings /></Layout>
             </PrivateRoute>
           } />
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -6,11 +6,27 @@ export default function Layout({ children }) {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef(null);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
+
+  // 드롭다운 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const isActive = (path) => location.pathname === path;
 
@@ -39,16 +55,99 @@ export default function Layout({ children }) {
               <Link to="/admin" style={navStyle('/admin')}>Admin</Link>
             )}
           </div>
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-            <div style={{ color: '#6b7280', fontSize: '14px' }}>
-              <span style={{ color: '#3b82f6', fontWeight: '600' }}>{user?.name}</span>
-              <span style={{ marginLeft: '8px', padding: '3px 10px', background: user?.role === 'admin' ? '#3b82f6' : '#e5e7eb', borderRadius: '12px', fontSize: '11px', color: user?.role === 'admin' ? '#fff' : '#6b7280', fontWeight: '500' }}>
-                {user?.role === 'admin' ? 'Admin' : 'User'}
-              </span>
+          <div style={{ position: 'relative' }} ref={dropdownRef}>
+            <div
+              onClick={() => setShowDropdown(!showDropdown)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                cursor: 'pointer',
+                padding: '8px 16px',
+                borderRadius: '8px',
+                transition: 'background 0.2s',
+                background: showDropdown ? '#f3f4f6' : 'transparent'
+              }}
+              onMouseEnter={(e) => { if (!showDropdown) e.currentTarget.style.background = '#f9fafb' }}
+              onMouseLeave={(e) => { if (!showDropdown) e.currentTarget.style.background = 'transparent' }}
+            >
+              <div style={{ color: '#6b7280', fontSize: '14px' }}>
+                <span style={{ color: '#3b82f6', fontWeight: '600' }}>{user?.name}</span>
+                <span style={{ marginLeft: '8px', padding: '3px 10px', background: user?.role === 'admin' ? '#3b82f6' : '#e5e7eb', borderRadius: '12px', fontSize: '11px', color: user?.role === 'admin' ? '#fff' : '#6b7280', fontWeight: '500' }}>
+                  {user?.role === 'admin' ? 'Admin' : 'User'}
+                </span>
+              </div>
+              <span style={{ fontSize: '12px', color: '#6b7280', transition: 'transform 0.2s', transform: showDropdown ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
             </div>
-            <button onClick={handleLogout} style={{ padding: '8px 16px', background: 'transparent', border: '1px solid #ef4444', borderRadius: '8px', color: '#ef4444', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}>
-              로그아웃
-            </button>
+
+            {/* 드롭다운 메뉴 */}
+            {showDropdown && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                right: 0,
+                marginTop: '8px',
+                background: '#ffffff',
+                border: '1px solid #e5e7eb',
+                borderRadius: '12px',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                minWidth: '200px',
+                zIndex: 1000,
+                overflow: 'hidden'
+              }}>
+                <button
+                  onClick={() => {
+                    navigate('/account-settings');
+                    setShowDropdown(false);
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    background: 'none',
+                    border: 'none',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    color: '#111827',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    transition: 'background 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#f9fafb'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+                >
+                  <span>⚙️</span>
+                  <span>계정 설정</span>
+                </button>
+                <div style={{ height: '1px', background: '#e5e7eb' }} />
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setShowDropdown(false);
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    background: 'none',
+                    border: 'none',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    color: '#ef4444',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    transition: 'background 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#fef2f2'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+                >
+                  <span>🚪</span>
+                  <span>로그아웃</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </nav>
