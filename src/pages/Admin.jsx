@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 
 const initialClients = [
-  { id: 1, name: '서울수면클리닉', type: 'hospital', portfolio: 'sleepq', address: '서울시 강남구 테헤란로 123', phone: '02-1234-5678', email: 'seoul@sleep.kr', neca: '2024-06-15', isPrescribing: true, staff: [{name: '김수면', isRep: true, phone: '010-1111-1111', email: 'kim@sleep.kr'}, {name: '이진료', isRep: false, phone: '010-2222-2222', email: 'lee@sleep.kr'}], partners: ['A파트너', 'B파트너'], grade: 'A', products: ['SleepQ'] },
-  { id: 2, name: '강남브레인의원', type: 'hospital', portfolio: 'sleepq', address: '서울시 강남구 역삼동 456', phone: '02-2345-6789', email: 'brain@clinic.kr', neca: '2024-07-20', isPrescribing: true, staff: [{name: '이두뇌', isRep: true, phone: '010-3333-3333', email: 'brain@clinic.kr'}], partners: ['A파트너'], grade: 'B', products: ['SleepQ'] },
-  { id: 3, name: '인천꿈의원', type: 'hospital', portfolio: 'sleepq', address: '인천시 연수구 송도동 321', phone: '032-456-7890', email: 'dream@incheon.kr', neca: null, isPrescribing: false, staff: [{name: '정꿈나라', isRep: true, phone: '010-4444-4444', email: 'dream@incheon.kr'}], partners: ['B파트너', 'C파트너'], grade: 'C', products: ['SleepQ'] },
+  { id: 1, name: '서울수면클리닉', type: 'hospital', portfolio: 'sleepq', address: '서울시 강남구 테헤란로 123', phone: '02-1234-5678', email: 'seoul@sleep.kr', notes: 'NECA 등록일: 2024-06-15', isPrescribing: true, staff: [{name: '김수면', isRep: true, phone: '010-1111-1111', email: 'kim@sleep.kr'}, {name: '이진료', isRep: false, phone: '010-2222-2222', email: 'lee@sleep.kr'}], partners: ['A파트너', 'B파트너'], grade: 'A', products: ['SleepQ'] },
+  { id: 2, name: '강남브레인의원', type: 'hospital', portfolio: 'sleepq', address: '서울시 강남구 역삼동 456', phone: '02-2345-6789', email: 'brain@clinic.kr', notes: 'NECA 등록일: 2024-07-20, 처방중', isPrescribing: true, staff: [{name: '이두뇌', isRep: true, phone: '010-3333-3333', email: 'brain@clinic.kr'}], partners: ['A파트너'], grade: 'B', products: ['SleepQ'] },
+  { id: 3, name: '인천꿈의원', type: 'hospital', portfolio: 'sleepq', address: '인천시 연수구 송도동 321', phone: '032-456-7890', email: 'dream@incheon.kr', notes: '미등록', isPrescribing: false, staff: [{name: '정꿈나라', isRep: true, phone: '010-4444-4444', email: 'dream@incheon.kr'}], partners: ['B파트너', 'C파트너'], grade: 'C', products: ['SleepQ'] },
 ];
 
 export default function AdminDashboard() {
@@ -13,7 +13,7 @@ export default function AdminDashboard() {
   const [confirmPopup, setConfirmPopup] = useState(null);
   const [portfolioManagePopup, setPortfolioManagePopup] = useState(false);
   const [partnerManagePopup, setPartnerManagePopup] = useState(false);
-  const [newClient, setNewClient] = useState({ name: '', type: 'hospital', portfolio: 'sleepq', address: '', phone: '', email: '', neca: '', isPrescribing: false, staff: [{name: '', isRep: true, phone: '', email: ''}], partners: [], grade: 'C', products: [] });
+  const [newClient, setNewClient] = useState({ name: '', type: 'hospital', portfolio: 'sleepq', address: '', phone: '', email: '', notes: '', staff: [{name: '', isRep: true, phone: '', email: ''}], partners: [], grade: 'C', products: [] });
 
   // 포트폴리오 및 제품 관리
   const [portfolios, setPortfolios] = useState([
@@ -127,7 +127,7 @@ export default function AdminDashboard() {
 
   const saveNew = () => {
     setClients(prev => [...prev, {...newClient, id: Date.now()}]);
-    setNewClient({ name: '', type: 'hospital', portfolio: 'sleepq', address: '', phone: '', email: '', neca: '', isPrescribing: false, staff: [{name: '', isRep: true, phone: '', email: ''}], partners: [], grade: 'C', products: [] });
+    setNewClient({ name: '', type: 'hospital', portfolio: 'sleepq', address: '', phone: '', email: '', notes: '', staff: [{name: '', isRep: true, phone: '', email: ''}], partners: [], grade: 'C', products: [] });
     setAddPopup(false);
     setConfirmPopup(null);
   };
@@ -248,39 +248,16 @@ export default function AdminDashboard() {
         <p style={{ color: '#9ca3af', fontSize: '11px', marginTop: '6px' }}>A: 월 3회 이상 | B: 월 2회 | C: 월 1회 | D: 필요시</p>
       </div>
 
-      {/* SleepQ 전용 필드 */}
-      {data.portfolio === 'sleepq' && (
-        <>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            <div><label style={labelStyle}>NECA 등록일</label><input type="date" style={inputStyle} value={data.neca || ''} onChange={e => setData(prev => ({...prev, neca: e.target.value}))} /></div>
-            <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-              <button onClick={() => setData(prev => ({...prev, isPrescribing: !prev.isPrescribing}))} style={{ padding: '10px 16px', background: data.isPrescribing ? '#4ade80' : '#f3f4f6', border: 'none', borderRadius: '8px', color: data.isPrescribing ? '#f9fafb' : '#6b7280', cursor: 'pointer', fontSize: '13px', fontWeight: '600', width: '100%' }}>
-                {data.isPrescribing ? '처방중' : '미처방'}
-              </button>
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* 코칭서비스 전용 필드 */}
-      {data.portfolio === 'coaching' && (
-        <>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            <div>
-              <label style={labelStyle}>서비스 유형</label>
-              <select style={inputStyle} value={data.serviceType || 'glpop'} onChange={e => setData(prev => ({...prev, serviceType: e.target.value}))}>
-                <option value="glpop">GLP-OP</option>
-                <option value="cgm">CGM</option>
-              </select>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-              <button type="button" onClick={() => setData(prev => ({...prev, cgmBarozen: !prev.cgmBarozen}))} style={{ padding: '10px 16px', background: data.cgmBarozen ? '#4ade80' : '#f3f4f6', border: 'none', borderRadius: '8px', color: data.cgmBarozen ? '#f9fafb' : '#6b7280', cursor: 'pointer', fontSize: '13px', fontWeight: '600', width: '100%' }}>
-                CGM 바로젠 구매 {data.cgmBarozen ? 'O' : 'X'}
-              </button>
-            </div>
-          </div>
-        </>
-      )}
+      {/* 비고 */}
+      <div>
+        <label style={labelStyle}>비고</label>
+        <textarea
+          style={{...inputStyle, minHeight: '100px', resize: 'vertical', fontFamily: 'inherit'}}
+          value={data.notes || ''}
+          onChange={e => setData(prev => ({...prev, notes: e.target.value}))}
+          placeholder="NECA 등록일, 서비스 유형, 기타 메모 등을 입력하세요"
+        />
+      </div>
 
       <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
@@ -359,7 +336,7 @@ export default function AdminDashboard() {
             </div>
             <div style={{ color: '#6b7280', fontSize: '14px' }}>{c.address}</div>
             <div style={{ color: '#38bdf8' }}>{c.staff.find(s => s.isRep)?.name || '-'}</div>
-            <div style={{ color: c.neca ? '#4ade80' : '#6b7280', fontSize: '14px' }}>{c.neca || '미등록'}</div>
+            <div style={{ color: '#6b7280', fontSize: '14px' }}>{c.notes || '-'}</div>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
               {c.partners.map(p => <span key={p} style={{ background: '#f9fafb', padding: '3px 10px', borderRadius: '12px', fontSize: '11px', color: '#6b7280' }}>{p}</span>)}
             </div>

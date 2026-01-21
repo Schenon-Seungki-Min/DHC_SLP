@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 
 const initialClients = [
-  { id: 1, name: '서울수면클리닉', type: 'hospital', portfolio: 'sleepq', address: '서울시 강남구 테헤란로 123, 5층 501호', city: '서울시', district: '강남구', dong: '테헤란로', staff: '김수면', otherStaff: ['이진료', '박상담'], phone: '010-1234-5678', email: 'seoul@sleep.kr', lastVisit: '2024-12-20', scheduledVisit: '2025-01-15', grade: 'A', memo: 'NECA 등록 완료. 처방 안정적', memoIsPublic: true, neca: '2024-06-15', products: ['SleepQ'], partners: [{name: 'A파트너', date: '2024-12-20', products: ['SleepQ'], memo: '제품 설명 완료'}, {name: 'B파트너', date: '2024-12-18', products: ['SleepQ'], memo: '샘플 전달'}] },
-  { id: 2, name: '강남브레인의원', type: 'hospital', portfolio: 'sleepq', address: '서울시 강남구 역삼동 456, 메디컬타워 3층', city: '서울시', district: '강남구', dong: '역삼동', staff: '이두뇌', otherStaff: ['최신경'], phone: '010-2345-6789', email: 'brain@clinic.kr', lastVisit: '2024-12-18', scheduledVisit: null, grade: 'B', memo: '관심 높음. 다음 방문 시 샘플 제공 예정', memoIsPublic: false, neca: '2024-07-20', products: ['SleepQ'], partners: [{name: 'A파트너', date: '2024-12-18', products: ['SleepQ'], memo: ''}] },
-  { id: 3, name: '분당숙면병원', type: 'hospital', portfolio: 'sleepq', address: '경기도 성남시 분당구 정자동 789, 힐링빌딩 2층', city: '경기도', district: '성남시', dong: '분당구', staff: '박숙면', otherStaff: [], phone: '010-3456-7890', email: 'bundang@sleep.kr', lastVisit: '2024-12-15', scheduledVisit: '2025-01-20', grade: 'C', memo: 'NECA 신청 검토 중', memoIsPublic: true, neca: '2024-08-10', products: ['SleepQ'], partners: [{name: 'C파트너', date: '2024-12-15', products: ['SleepQ'], memo: 'NECA 신청 안내'}, {name: 'A파트너', date: '2024-12-10', products: ['SleepQ'], memo: ''}] },
-  { id: 4, name: '인천꿈의원', type: 'hospital', portfolio: 'sleepq', address: '인천시 연수구 송도동 321, 드림타워 10층 1001호', city: '인천시', district: '연수구', dong: '송도동', staff: '정꿈나라', otherStaff: ['한밤잠', '오숙면'], phone: '010-4567-8901', email: 'dream@incheon.kr', lastVisit: '2024-12-22', scheduledVisit: '2025-01-10', grade: 'A', memo: '계약 체결 완료', memoIsPublic: false, neca: null, products: ['SleepQ'], partners: [{name: 'B파트너', date: '2024-12-22', products: ['SleepQ'], memo: '계약 완료'}] },
-  { id: 5, name: '건강약국', type: 'pharmacy', portfolio: 'coaching', team: 'south_east', address: '서울시 송파구 잠실동 100, 롯데타워 지하 1층', city: '서울시', district: '송파구', dong: '잠실동', staff: '박약사', otherStaff: [], phone: '010-5555-6666', email: 'health@pharm.kr', lastVisit: '2024-12-19', scheduledVisit: '2025-01-18', grade: 'B', memo: 'GLP 비만 관리 서비스 관심', memoIsPublic: true, neca: null, products: ['GLP-OP', 'CGM'], partners: [{name: 'D파트너', date: '2024-12-19', products: ['GLP-OP'], memo: 'GLP 설명'}] },
+  { id: 1, name: '서울수면클리닉', type: 'hospital', portfolio: 'sleepq', address: '서울시 강남구 테헤란로 123, 5층 501호', city: '서울시', district: '강남구', dong: '테헤란로', staff: '김수면', otherStaff: ['이진료', '박상담'], phone: '010-1234-5678', email: 'seoul@sleep.kr', lastVisit: '2024-12-20', scheduledVisit: '2025-01-15', grade: 'A', memo: 'NECA 등록 완료. 처방 안정적', memoIsPublic: true, notes: 'NECA 등록일: 2024-06-15\n처방중', products: ['SleepQ'], partners: [{name: 'A파트너', date: '2024-12-20', products: ['SleepQ'], memo: '제품 설명 완료'}, {name: 'B파트너', date: '2024-12-18', products: ['SleepQ'], memo: '샘플 전달'}] },
+  { id: 2, name: '강남브레인의원', type: 'hospital', portfolio: 'sleepq', address: '서울시 강남구 역삼동 456, 메디컬타워 3층', city: '서울시', district: '강남구', dong: '역삼동', staff: '이두뇌', otherStaff: ['최신경'], phone: '010-2345-6789', email: 'brain@clinic.kr', lastVisit: '2024-12-18', scheduledVisit: null, grade: 'B', memo: '관심 높음. 다음 방문 시 샘플 제공 예정', memoIsPublic: false, notes: 'NECA 등록일: 2024-07-20\n처방중', products: ['SleepQ'], partners: [{name: 'A파트너', date: '2024-12-18', products: ['SleepQ'], memo: ''}] },
+  { id: 3, name: '분당숙면병원', type: 'hospital', portfolio: 'sleepq', address: '경기도 성남시 분당구 정자동 789, 힐링빌딩 2층', city: '경기도', district: '성남시', dong: '분당구', staff: '박숙면', otherStaff: [], phone: '010-3456-7890', email: 'bundang@sleep.kr', lastVisit: '2024-12-15', scheduledVisit: '2025-01-20', grade: 'C', memo: 'NECA 신청 검토 중', memoIsPublic: true, notes: 'NECA 등록일: 2024-08-10', products: ['SleepQ'], partners: [{name: 'C파트너', date: '2024-12-15', products: ['SleepQ'], memo: 'NECA 신청 안내'}, {name: 'A파트너', date: '2024-12-10', products: ['SleepQ'], memo: ''}] },
+  { id: 4, name: '인천꿈의원', type: 'hospital', portfolio: 'sleepq', address: '인천시 연수구 송도동 321, 드림타워 10층 1001호', city: '인천시', district: '연수구', dong: '송도동', staff: '정꿈나라', otherStaff: ['한밤잠', '오숙면'], phone: '010-4567-8901', email: 'dream@incheon.kr', lastVisit: '2024-12-22', scheduledVisit: '2025-01-10', grade: 'A', memo: '계약 체결 완료', memoIsPublic: false, notes: '미등록', products: ['SleepQ'], partners: [{name: 'B파트너', date: '2024-12-22', products: ['SleepQ'], memo: '계약 완료'}] },
+  { id: 5, name: '건강약국', type: 'pharmacy', portfolio: 'coaching', team: 'south_east', address: '서울시 송파구 잠실동 100, 롯데타워 지하 1층', city: '서울시', district: '송파구', dong: '잠실동', staff: '박약사', otherStaff: [], phone: '010-5555-6666', email: 'health@pharm.kr', lastVisit: '2024-12-19', scheduledVisit: '2025-01-18', grade: 'B', memo: 'GLP 비만 관리 서비스 관심', memoIsPublic: true, notes: '서비스 유형: GLP-OP', products: ['GLP-OP', 'CGM'], partners: [{name: 'D파트너', date: '2024-12-19', products: ['GLP-OP'], memo: 'GLP 설명'}] },
 ];
 
 function GradeTooltip() {
@@ -181,7 +181,7 @@ export default function ClientDashboard() {
             {/* 거래처명 + 유형 뱃지 + 제품 태그 */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontWeight: '600', color: '#111827', cursor: 'pointer' }} onClick={() => setPopup({ type: 'neca', data: c })}>{c.name}</span>
+                <span style={{ fontWeight: '600', color: '#111827', cursor: 'pointer' }} onClick={() => setPopup({ type: 'notes', data: c })}>{c.name}</span>
                 <span style={{ background: c.type === 'hospital' ? '#dbeafe' : '#fef3c7', color: c.type === 'hospital' ? '#1e40af' : '#92400e', padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: '600' }}>{c.type === 'hospital' ? '병원' : '약국'}</span>
               </div>
               <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
@@ -223,15 +223,15 @@ export default function ClientDashboard() {
         ))}
       </div>
 
-      {/* NECA Popup */}
-      {popup.type === 'neca' && (
+      {/* Notes Popup */}
+      {popup.type === 'notes' && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div style={{ background: '#ffffff', borderRadius: '16px', padding: '32px', width: '400px', border: '1px solid #f3f4f6', position: 'relative' }}>
+          <div style={{ background: '#ffffff', borderRadius: '16px', padding: '32px', width: '500px', border: '1px solid #f3f4f6', position: 'relative' }}>
             <button onClick={closePopup} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#6b7280', fontSize: '24px', cursor: 'pointer' }}>×</button>
             <h3 style={{ margin: '0 0 24px', color: '#111827' }}>{popup.data.name}</h3>
             <div style={{ background: '#f9fafb', borderRadius: '12px', padding: '20px' }}>
-              <p style={{ color: '#6b7280', fontSize: '13px', margin: '0 0 8px' }}>NECA 등록일</p>
-              <p style={{ color: popup.data.neca ? '#4ade80' : '#ef4444', fontSize: '20px', fontWeight: '600', margin: 0 }}>{popup.data.neca || '미등록'}</p>
+              <p style={{ color: '#6b7280', fontSize: '13px', margin: '0 0 12px', fontWeight: '600' }}>비고</p>
+              <p style={{ color: '#111827', fontSize: '15px', margin: 0, lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>{popup.data.notes || '-'}</p>
             </div>
           </div>
         </div>
