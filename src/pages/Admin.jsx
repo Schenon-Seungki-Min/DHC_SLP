@@ -6,14 +6,13 @@ const initialClients = [
   { id: 3, name: '인천꿈의원', type: 'hospital', portfolio: 'sleepq', address: '인천시 연수구 송도동 321', phone: '032-456-7890', email: 'dream@incheon.kr', neca: null, isPrescribing: false, staff: [{name: '정꿈나라', isRep: true, phone: '010-4444-4444', email: 'dream@incheon.kr'}], partners: ['B파트너', 'C파트너'], grade: 'C', products: ['SleepQ'] },
 ];
 
-const allPartners = ['A파트너', 'B파트너', 'C파트너', 'D파트너'];
-
 export default function AdminDashboard() {
   const [clients, setClients] = useState(initialClients);
   const [editPopup, setEditPopup] = useState(null);
   const [addPopup, setAddPopup] = useState(false);
   const [confirmPopup, setConfirmPopup] = useState(null);
   const [portfolioManagePopup, setPortfolioManagePopup] = useState(false);
+  const [partnerManagePopup, setPartnerManagePopup] = useState(false);
   const [newClient, setNewClient] = useState({ name: '', type: 'hospital', portfolio: 'sleepq', address: '', phone: '', email: '', neca: '', isPrescribing: false, staff: [{name: '', isRep: true, phone: '', email: ''}], partners: [], grade: 'C', products: [] });
 
   // 포트폴리오 및 제품 관리
@@ -24,7 +23,16 @@ export default function AdminDashboard() {
   const [newPortfolioName, setNewPortfolioName] = useState('');
   const [editingPortfolio, setEditingPortfolio] = useState(null);
 
-  const closeAll = () => { setEditPopup(null); setAddPopup(false); setConfirmPopup(null); setPortfolioManagePopup(false); };
+  // 협력사 관리
+  const [partners, setPartners] = useState([
+    { id: 'a', name: 'A파트너', company: '(주)에이컴퍼니', phone: '02-1234-5678', email: 'partner.a@example.com', address: '서울시 강남구' },
+    { id: 'b', name: 'B파트너', company: '(주)비컴퍼니', phone: '02-2345-6789', email: 'partner.b@example.com', address: '서울시 서초구' },
+    { id: 'c', name: 'C파트너', company: '(주)씨컴퍼니', phone: '02-3456-7890', email: 'partner.c@example.com', address: '서울시 송파구' },
+    { id: 'd', name: 'D파트너', company: '(주)디컴퍼니', phone: '02-4567-8901', email: 'partner.d@example.com', address: '서울시 강동구' }
+  ]);
+  const [editingPartner, setEditingPartner] = useState(null);
+
+  const closeAll = () => { setEditPopup(null); setAddPopup(false); setConfirmPopup(null); setPortfolioManagePopup(false); setPartnerManagePopup(false); };
 
   const togglePartner = (client, partner, isEdit = false) => {
     if (isEdit) {
@@ -78,6 +86,20 @@ export default function AdminDashboard() {
     ));
   };
 
+  // 협력사 관리 함수들
+  const addPartner = (partnerData) => {
+    const id = Date.now().toString();
+    setPartners(prev => [...prev, { ...partnerData, id }]);
+  };
+
+  const updatePartner = (id, partnerData) => {
+    setPartners(prev => prev.map(p => p.id === id ? { ...p, ...partnerData } : p));
+  };
+
+  const deletePartner = (id) => {
+    setPartners(prev => prev.filter(p => p.id !== id));
+  };
+
   const addStaff = (isEdit = false) => {
     const newStaffMember = {name: '', isRep: false, phone: '', email: ''};
     if (isEdit) {
@@ -124,7 +146,7 @@ export default function AdminDashboard() {
   const inputStyle = { width: '100%', background: '#f9fafb', border: '1px solid #f3f4f6', borderRadius: '8px', padding: '10px 12px', color: '#111827', fontSize: '14px', boxSizing: 'border-box' };
   const labelStyle = { color: '#6b7280', fontSize: '12px', marginBottom: '6px', display: 'block' };
 
-  const ClientForm = ({ data, setData, isEdit, portfolios, setPortfolioManagePopup, toggleProduct }) => (
+  const ClientForm = ({ data, setData, isEdit, portfolios, setPortfolioManagePopup, toggleProduct, partners, setPartnerManagePopup, togglePartner }) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '60vh', overflowY: 'auto', paddingRight: '8px' }}>
       {/* 기본 정보 */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -280,10 +302,28 @@ export default function AdminDashboard() {
       </div>
 
       <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: '16px' }}>
-        <label style={labelStyle}>담당 협력사</label>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          <label style={{...labelStyle, margin: 0}}>담당 협력사</label>
+          <button
+            type="button"
+            onClick={() => setPartnerManagePopup(true)}
+            style={{
+              padding: '6px 12px',
+              background: '#f9fafb',
+              border: '1px solid #e5e7eb',
+              borderRadius: '6px',
+              color: '#6b7280',
+              cursor: 'pointer',
+              fontSize: '12px',
+              fontWeight: '600'
+            }}
+          >
+            관리
+          </button>
+        </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-          {allPartners.map(p => (
-            <button key={p} type="button" onClick={() => togglePartner(data, p, isEdit)} style={{ padding: '8px 16px', background: data.partners.includes(p) ? '#3b82f6' : '#f9fafb', border: '1px solid #f3f4f6', borderRadius: '20px', color: data.partners.includes(p) ? '#fff' : '#6b7280', cursor: 'pointer', fontSize: '13px' }}>{p}</button>
+          {partners.map(p => (
+            <button key={p.id} type="button" onClick={() => togglePartner(data, p.name, isEdit)} style={{ padding: '8px 16px', background: data.partners.includes(p.name) ? '#3b82f6' : '#f9fafb', border: '1px solid #f3f4f6', borderRadius: '20px', color: data.partners.includes(p.name) ? '#fff' : '#6b7280', cursor: 'pointer', fontSize: '13px' }}>{p.name}</button>
           ))}
         </div>
       </div>
@@ -334,7 +374,7 @@ export default function AdminDashboard() {
           <div style={{ background: '#ffffff', borderRadius: '16px', padding: '32px', width: '560px', border: '1px solid #f3f4f6', position: 'relative' }}>
             <button onClick={closeAll} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#6b7280', fontSize: '24px', cursor: 'pointer' }}>×</button>
             <h3 style={{ margin: '0 0 24px', color: '#111827' }}>거래처 등록</h3>
-            <ClientForm data={newClient} setData={setNewClient} isEdit={false} portfolios={portfolios} setPortfolioManagePopup={setPortfolioManagePopup} toggleProduct={toggleProduct} />
+            <ClientForm data={newClient} setData={setNewClient} isEdit={false} portfolios={portfolios} setPortfolioManagePopup={setPortfolioManagePopup} toggleProduct={toggleProduct} partners={partners} setPartnerManagePopup={setPartnerManagePopup} togglePartner={togglePartner} />
             <button onClick={() => setConfirmPopup({ type: 'add', action: saveNew })} style={{ width: '100%', marginTop: '20px', padding: '14px', background: 'linear-gradient(135deg, #3b82f6, #2563eb)', border: 'none', borderRadius: '10px', color: '#fff', fontWeight: '600', cursor: 'pointer' }}>등록하기</button>
           </div>
         </div>
@@ -346,7 +386,7 @@ export default function AdminDashboard() {
           <div style={{ background: '#ffffff', borderRadius: '16px', padding: '32px', width: '560px', border: '1px solid #f3f4f6', position: 'relative' }}>
             <button onClick={closeAll} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#6b7280', fontSize: '24px', cursor: 'pointer' }}>×</button>
             <h3 style={{ margin: '0 0 24px', color: '#111827' }}>거래처 수정</h3>
-            <ClientForm data={editPopup} setData={setEditPopup} isEdit={true} portfolios={portfolios} setPortfolioManagePopup={setPortfolioManagePopup} toggleProduct={toggleProduct} />
+            <ClientForm data={editPopup} setData={setEditPopup} isEdit={true} portfolios={portfolios} setPortfolioManagePopup={setPortfolioManagePopup} toggleProduct={toggleProduct} partners={partners} setPartnerManagePopup={setPartnerManagePopup} togglePartner={togglePartner} />
             <button onClick={() => setConfirmPopup({ type: 'edit', action: saveEdit })} style={{ width: '100%', marginTop: '20px', padding: '14px', background: 'linear-gradient(135deg, #4ade80, #22c55e)', border: 'none', borderRadius: '10px', color: '#f9fafb', fontWeight: '600', cursor: 'pointer' }}>저장하기</button>
           </div>
         </div>
@@ -506,6 +546,237 @@ export default function AdminDashboard() {
                     fontSize: '13px',
                     fontWeight: '600',
                     whiteSpace: 'nowrap'
+                  }}
+                >
+                  추가
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Partner Management Popup */}
+      {partnerManagePopup && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 150 }}>
+          <div style={{ background: '#ffffff', borderRadius: '16px', padding: '32px', width: '700px', maxHeight: '80vh', overflowY: 'auto', border: '1px solid #f3f4f6', position: 'relative' }}>
+            <button onClick={() => setPartnerManagePopup(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#6b7280', fontSize: '24px', cursor: 'pointer' }}>×</button>
+            <h3 style={{ margin: '0 0 24px', color: '#111827' }}>협력사 관리</h3>
+
+            {/* 협력사 목록 */}
+            <div style={{ marginBottom: '24px' }}>
+              {partners.map(partner => (
+                <div key={partner.id} style={{ background: '#f9fafb', borderRadius: '12px', padding: '20px', marginBottom: '16px' }}>
+                  {editingPartner === partner.id ? (
+                    // 편집 모드
+                    <div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                        <div>
+                          <label style={labelStyle}>협력사명 *</label>
+                          <input
+                            style={inputStyle}
+                            value={partner.name}
+                            onChange={e => updatePartner(partner.id, { name: e.target.value })}
+                          />
+                        </div>
+                        <div>
+                          <label style={labelStyle}>소속 기업 *</label>
+                          <input
+                            style={inputStyle}
+                            value={partner.company}
+                            onChange={e => updatePartner(partner.id, { company: e.target.value })}
+                          />
+                        </div>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                        <div>
+                          <label style={labelStyle}>핸드폰 번호 *</label>
+                          <input
+                            style={inputStyle}
+                            value={partner.phone}
+                            onChange={e => updatePartner(partner.id, { phone: e.target.value })}
+                          />
+                        </div>
+                        <div>
+                          <label style={labelStyle}>이메일 주소 *</label>
+                          <input
+                            style={inputStyle}
+                            type="email"
+                            value={partner.email}
+                            onChange={e => updatePartner(partner.id, { email: e.target.value })}
+                          />
+                        </div>
+                      </div>
+                      <div style={{ marginBottom: '12px' }}>
+                        <label style={labelStyle}>직장 주소</label>
+                        <input
+                          style={inputStyle}
+                          value={partner.address}
+                          onChange={e => updatePartner(partner.id, { address: e.target.value })}
+                        />
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                        <button
+                          onClick={() => setEditingPartner(null)}
+                          style={{
+                            padding: '8px 16px',
+                            background: '#10b981',
+                            border: 'none',
+                            borderRadius: '8px',
+                            color: '#ffffff',
+                            cursor: 'pointer',
+                            fontSize: '13px',
+                            fontWeight: '600'
+                          }}
+                        >
+                          완료
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    // 보기 모드
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px' }}>
+                        <div>
+                          <h4 style={{ margin: '0 0 4px', color: '#111827', fontSize: '16px', fontWeight: '600' }}>{partner.name}</h4>
+                          <p style={{ margin: 0, color: '#6b7280', fontSize: '13px' }}>{partner.company}</p>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button
+                            onClick={() => setEditingPartner(partner.id)}
+                            style={{
+                              background: '#dbeafe',
+                              border: 'none',
+                              borderRadius: '6px',
+                              color: '#3b82f6',
+                              padding: '6px 12px',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              fontWeight: '600'
+                            }}
+                          >
+                            수정
+                          </button>
+                          <button
+                            onClick={() => deletePartner(partner.id)}
+                            style={{
+                              background: '#fee2e2',
+                              border: 'none',
+                              borderRadius: '6px',
+                              color: '#ef4444',
+                              padding: '6px 12px',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              fontWeight: '600'
+                            }}
+                          >
+                            삭제
+                          </button>
+                        </div>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '13px' }}>
+                        <div>
+                          <span style={{ color: '#6b7280' }}>📞 </span>
+                          <span style={{ color: '#111827' }}>{partner.phone}</span>
+                        </div>
+                        <div>
+                          <span style={{ color: '#6b7280' }}>✉️ </span>
+                          <span style={{ color: '#111827' }}>{partner.email}</span>
+                        </div>
+                      </div>
+                      {partner.address && (
+                        <div style={{ marginTop: '8px', fontSize: '13px' }}>
+                          <span style={{ color: '#6b7280' }}>📍 </span>
+                          <span style={{ color: '#111827' }}>{partner.address}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* 새 협력사 추가 */}
+            <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: '20px' }}>
+              <label style={{...labelStyle, marginBottom: '12px'}}>새 협력사 추가</label>
+              <div style={{ background: '#f9fafb', borderRadius: '12px', padding: '16px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                  <div>
+                    <label style={labelStyle}>협력사명 *</label>
+                    <input
+                      id="new-partner-name"
+                      placeholder="예: A파트너"
+                      style={inputStyle}
+                    />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>소속 기업 *</label>
+                    <input
+                      id="new-partner-company"
+                      placeholder="예: (주)에이컴퍼니"
+                      style={inputStyle}
+                    />
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                  <div>
+                    <label style={labelStyle}>핸드폰 번호 *</label>
+                    <input
+                      id="new-partner-phone"
+                      placeholder="예: 010-1234-5678"
+                      style={inputStyle}
+                    />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>이메일 주소 *</label>
+                    <input
+                      id="new-partner-email"
+                      type="email"
+                      placeholder="예: partner@example.com"
+                      style={inputStyle}
+                    />
+                  </div>
+                </div>
+                <div style={{ marginBottom: '12px' }}>
+                  <label style={labelStyle}>직장 주소</label>
+                  <input
+                    id="new-partner-address"
+                    placeholder="예: 서울시 강남구"
+                    style={inputStyle}
+                  />
+                </div>
+                <button
+                  onClick={() => {
+                    const name = document.getElementById('new-partner-name').value.trim();
+                    const company = document.getElementById('new-partner-company').value.trim();
+                    const phone = document.getElementById('new-partner-phone').value.trim();
+                    const email = document.getElementById('new-partner-email').value.trim();
+                    const address = document.getElementById('new-partner-address').value.trim();
+
+                    if (!name || !company || !phone || !email) {
+                      alert('필수 항목을 모두 입력해주세요.');
+                      return;
+                    }
+
+                    addPartner({ name, company, phone, email, address });
+
+                    // 입력 필드 초기화
+                    document.getElementById('new-partner-name').value = '';
+                    document.getElementById('new-partner-company').value = '';
+                    document.getElementById('new-partner-phone').value = '';
+                    document.getElementById('new-partner-email').value = '';
+                    document.getElementById('new-partner-address').value = '';
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: '#ffffff',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '600'
                   }}
                 >
                   추가
