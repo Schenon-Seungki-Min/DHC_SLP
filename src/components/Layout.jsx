@@ -48,11 +48,18 @@ export default function Layout({ children }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
             <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '700', color: '#111827', marginRight: '24px' }}>병원 영업 관리 시스템</h2>
-            <Link to="/dashboard" style={navStyle('/dashboard')}>내고객</Link>
-            <Link to="/all-hospitals" style={navStyle('/all-hospitals')}>전체고객</Link>
-            <Link to="/map-planner" style={navStyle('/map-planner')}>콜플랜</Link>
+            {user?.role !== 'master' && (
+              <>
+                <Link to="/dashboard" style={navStyle('/dashboard')}>내고객</Link>
+                <Link to="/all-hospitals" style={navStyle('/all-hospitals')}>전체고객</Link>
+                <Link to="/map-planner" style={navStyle('/map-planner')}>콜플랜</Link>
+              </>
+            )}
             {user?.role === 'admin' && (
               <Link to="/admin" style={navStyle('/admin')}>Admin</Link>
+            )}
+            {user?.role === 'master' && (
+              <Link to="/master" style={navStyle('/master')}>Master</Link>
             )}
           </div>
           <div style={{ position: 'relative' }} ref={dropdownRef}>
@@ -73,8 +80,16 @@ export default function Layout({ children }) {
             >
               <div style={{ color: '#6b7280', fontSize: '14px' }}>
                 <span style={{ color: '#3b82f6', fontWeight: '600' }}>{user?.name}</span>
-                <span style={{ marginLeft: '8px', padding: '3px 10px', background: user?.role === 'admin' ? '#3b82f6' : '#e5e7eb', borderRadius: '12px', fontSize: '11px', color: user?.role === 'admin' ? '#fff' : '#6b7280', fontWeight: '500' }}>
-                  {user?.role === 'admin' ? 'Admin' : 'User'}
+                <span style={{
+                  marginLeft: '8px',
+                  padding: '3px 10px',
+                  background: user?.role === 'master' ? '#ef4444' : user?.role === 'admin' ? '#3b82f6' : '#e5e7eb',
+                  borderRadius: '12px',
+                  fontSize: '11px',
+                  color: (user?.role === 'master' || user?.role === 'admin') ? '#fff' : '#6b7280',
+                  fontWeight: '500'
+                }}>
+                  {user?.role === 'master' ? 'Master' : user?.role === 'admin' ? 'Admin' : 'User'}
                 </span>
               </div>
               <span style={{ fontSize: '12px', color: '#6b7280', transition: 'transform 0.2s', transform: showDropdown ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>

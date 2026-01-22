@@ -19,6 +19,7 @@ export const AuthProvider = ({ children }) => {
   const login = (username, password) => {
     // Demo credentials
     const users = {
+      'master': { username: 'master', password: 'master123', role: 'master', name: 'Master' },
       'admin': { username: 'admin', password: 'admin123', role: 'admin', name: '관리자' },
       'user': { username: 'user', password: 'user123', role: 'user', name: 'A파트너' },
     };

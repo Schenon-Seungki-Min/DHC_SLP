@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard';
 import AllHospitals from './pages/AllHospitals';
 import MapPlanner from './pages/MapPlanner';
 import Admin from './pages/Admin';
+import Master from './pages/Master';
 import AccountSettings from './pages/AccountSettings';
 
 function App() {
@@ -43,13 +44,23 @@ function App() {
             </PrivateRoute>
           } />
 
+          <Route path="/master" element={
+            <PrivateRoute masterOnly>
+              <Layout><Master /></Layout>
+            </PrivateRoute>
+          } />
+
           <Route path="/account-settings" element={
             <PrivateRoute>
               <Layout><AccountSettings /></Layout>
             </PrivateRoute>
           } />
 
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/" element={
+            <PrivateRoute>
+              <Navigate to="/dashboard" replace />
+            </PrivateRoute>
+          } />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
