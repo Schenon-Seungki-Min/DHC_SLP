@@ -160,16 +160,44 @@ export default function MapRoutePlanner() {
     const savedVisitRecords = localStorage.getItem('visitRecords');
     if (savedVisitRecords) {
       try {
-        setVisitRecords(JSON.parse(savedVisitRecords));
+        const records = JSON.parse(savedVisitRecords);
+        setVisitRecords(records);
+        console.log('📋 방문 기록 로드됨:', records);
       } catch (e) {
         console.error('Failed to load visitRecords:', e);
       }
+    } else {
+      console.log('📋 방문 기록 없음');
     }
+  }, []);
+
+  // 페이지에 포커스가 돌아올 때 visitRecords 다시 로드
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        const savedVisitRecords = localStorage.getItem('visitRecords');
+        if (savedVisitRecords) {
+          try {
+            const records = JSON.parse(savedVisitRecords);
+            setVisitRecords(records);
+            console.log('🔄 방문 기록 새로고침:', records);
+          } catch (e) {
+            console.error('Failed to reload visitRecords:', e);
+          }
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   // 특정 날짜와 거래처의 방문 상태 확인
   const getVisitStatus = (clientId, date) => {
     const record = visitRecords.find(r => r.clientId === clientId && r.date === date);
+    console.log(`🔍 방문 상태 확인 - 거래처 ID: ${clientId}, 날짜: ${date}, 상태:`, record?.status || '기록없음');
     if (!record) return null;
     return record.status; // 'completed' or 'cancelled'
   };
