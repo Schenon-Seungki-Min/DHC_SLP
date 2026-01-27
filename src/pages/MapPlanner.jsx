@@ -211,6 +211,12 @@ export default function MapRoutePlanner() {
 
   // 선택된 날짜에 병원 추가/제거
   const toggleDatePlan = (clientId) => {
+    // 확정된 날짜는 수정 불가
+    if (confirmedDates.has(selectedDate)) {
+      alert('이미 확정된 일정입니다. 수정할 수 없습니다.');
+      return;
+    }
+
     setDailyPlans(prev => {
       const dateList = prev[selectedDate] || [];
       const exists = dateList.includes(clientId);
@@ -445,29 +451,31 @@ export default function MapRoutePlanner() {
             ) : (
               todayClients.map((c, i) => (
                 <div key={c.id} style={{ background: '#f9fafb', borderRadius: '12px', padding: '14px', position: 'relative' }}>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleDatePlan(c.id);
-                    }}
-                    style={{
-                      position: 'absolute',
-                      top: '8px',
-                      right: '8px',
-                      background: 'none',
-                      border: 'none',
-                      color: '#9ca3af',
-                      cursor: 'pointer',
-                      fontSize: '18px',
-                      padding: '4px',
-                      lineHeight: '1',
-                      transition: 'color 0.2s'
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
-                    onMouseLeave={e => e.currentTarget.style.color = '#9ca3af'}
-                  >
-                    ×
-                  </button>
+                  {!isDateConfirmed && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleDatePlan(c.id);
+                      }}
+                      style={{
+                        position: 'absolute',
+                        top: '8px',
+                        right: '8px',
+                        background: 'none',
+                        border: 'none',
+                        color: '#9ca3af',
+                        cursor: 'pointer',
+                        fontSize: '18px',
+                        padding: '4px',
+                        lineHeight: '1',
+                        transition: 'color 0.2s'
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
+                      onMouseLeave={e => e.currentTarget.style.color = '#9ca3af'}
+                    >
+                      ×
+                    </button>
+                  )}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                     <span style={{
                       background: c.scheduledVisit === selectedDate ? '#fbbf24' : '#4ade80',
