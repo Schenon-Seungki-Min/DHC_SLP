@@ -78,6 +78,9 @@ export default function ClientDashboard() {
     rescheduleDate: ''
   });
 
+  // 전체 제품 리스트
+  const allProducts = ['SleepQ', 'GLP-OP', 'CGM'];
+
   // localStorage에서 사용자 정보 불러오기
   useEffect(() => {
     const userAccount = localStorage.getItem('userAccount');
@@ -683,41 +686,101 @@ export default function ClientDashboard() {
                 </div>
                 <div style={{ marginBottom: '20px' }}>
                   <label style={{ color: '#6b7280', fontSize: '13px', marginBottom: '8px', display: 'block', fontWeight: '600' }}>제공 제품 *</label>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                    {visitRecordPopup.products.map((product) => {
-                      const isSelected = visitRecord.products.includes(product);
-                      return (
-                        <button
+
+                  {/* 선택된 제품 표시 */}
+                  {visitRecord.products.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
+                      {visitRecord.products.map((product) => (
+                        <div
                           key={product}
-                          onClick={() => {
-                            if (isSelected) {
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '6px 12px',
+                            background: '#4338ca',
+                            border: 'none',
+                            borderRadius: '20px',
+                            color: '#ffffff',
+                            fontSize: '13px',
+                            fontWeight: '600'
+                          }}
+                        >
+                          <span>{product}</span>
+                          <button
+                            onClick={() => {
                               setVisitRecord({
                                 ...visitRecord,
                                 products: visitRecord.products.filter(p => p !== product)
                               });
-                            } else {
-                              setVisitRecord({
-                                ...visitRecord,
-                                products: [...visitRecord.products, product]
-                              });
-                            }
-                          }}
-                          style={{
-                            padding: '8px 16px',
-                            background: isSelected ? '#4338ca' : '#f9fafb',
-                            border: '1px solid #e5e7eb',
-                            borderRadius: '20px',
-                            color: isSelected ? '#ffffff' : '#6b7280',
-                            fontSize: '13px',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s'
-                          }}
-                        >
-                          {product}
-                        </button>
-                      );
-                    })}
+                            }}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: '#ffffff',
+                              cursor: 'pointer',
+                              padding: '0',
+                              fontSize: '16px',
+                              lineHeight: '1',
+                              display: 'flex',
+                              alignItems: 'center'
+                            }}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* 제품 추가 드롭다운 */}
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <select
+                      id="product-select"
+                      style={{
+                        flex: 1,
+                        padding: '10px 12px',
+                        background: '#f9fafb',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        color: '#111827',
+                        fontSize: '14px',
+                        boxSizing: 'border-box'
+                      }}
+                    >
+                      <option value="">제품 선택...</option>
+                      {allProducts
+                        .filter(p => !visitRecord.products.includes(p))
+                        .map(product => (
+                          <option key={product} value={product}>{product}</option>
+                        ))}
+                    </select>
+                    <button
+                      onClick={() => {
+                        const selectEl = document.getElementById('product-select');
+                        const selectedProduct = selectEl.value;
+                        if (selectedProduct && !visitRecord.products.includes(selectedProduct)) {
+                          setVisitRecord({
+                            ...visitRecord,
+                            products: [...visitRecord.products, selectedProduct]
+                          });
+                          selectEl.value = '';
+                        }
+                      }}
+                      style={{
+                        padding: '10px 20px',
+                        background: '#3b82f6',
+                        border: 'none',
+                        borderRadius: '8px',
+                        color: '#ffffff',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      추가
+                    </button>
                   </div>
                 </div>
                 <div style={{ marginBottom: '20px' }}>
