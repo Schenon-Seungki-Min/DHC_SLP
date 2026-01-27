@@ -34,7 +34,28 @@ export default function AdminDashboard() {
   ]);
   const [editingPartner, setEditingPartner] = useState(null);
 
-  const closeAll = () => { setEditPopup(null); setAddPopup(false); setConfirmPopup(null); setPortfolioManagePopup(false); setPartnerManagePopup(false); };
+  // 회원 승인 관리
+  const [userApprovalPopup, setUserApprovalPopup] = useState(false);
+  const [registeredUsers, setRegisteredUsers] = useState([]);
+
+  // 회원 목록 불러오기
+  React.useEffect(() => {
+    if (userApprovalPopup) {
+      const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+      setRegisteredUsers(users);
+    }
+  }, [userApprovalPopup]);
+
+  // 회원 승인/거부
+  const handleUserApproval = (userId, status) => {
+    const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+    const updatedUsers = users.map(u => u.id === userId ? { ...u, status } : u);
+    localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers));
+    setRegisteredUsers(updatedUsers);
+    alert(status === 'approved' ? '회원이 승인되었습니다.' : '회원이 거부되었습니다.');
+  };
+
+  const closeAll = () => { setEditPopup(null); setAddPopup(false); setConfirmPopup(null); setPortfolioManagePopup(false); setPartnerManagePopup(false); setUserApprovalPopup(false); };
 
   const togglePartner = (client, partner, isEdit = false) => {
     if (isEdit) {
@@ -337,6 +358,9 @@ export default function AdminDashboard() {
           <p style={{ color: '#6b7280', marginTop: '4px', fontSize: '14px' }}>{clients.length}개 거래처</p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
+          <button onClick={() => setUserApprovalPopup(true)} style={{ padding: '12px 20px', background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '10px', color: '#111827', fontWeight: '600', cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            👥 회원 승인 관리
+          </button>
           <button onClick={handleDownloadExcel} style={{ padding: '12px 20px', background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '10px', color: '#111827', fontWeight: '600', cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
             📥 콜 플랜 다운로드
           </button>
@@ -924,6 +948,125 @@ export default function AdminDashboard() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* User Approval Popup */}
+      {userApprovalPopup && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: '#ffffff', borderRadius: '16px', padding: '32px', width: '900px', maxHeight: '80vh', overflowY: 'auto', position: 'relative' }}>
+            <button onClick={() => setUserApprovalPopup(false)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#6b7280', fontSize: '24px', cursor: 'pointer' }}>×</button>
+            <h3 style={{ margin: '0 0 24px', color: '#111827', fontSize: '20px', fontWeight: '600' }}>회원 승인 관리</h3>
+
+            {registeredUsers.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+                등록된 회원이 없습니다.
+              </div>
+            ) : (
+              <div style={{ border: '1px solid #e5e7eb', borderRadius: '12px', overflow: 'hidden' }}>
+                {/* Header */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.2fr 1fr 1.5fr 1fr 180px', padding: '14px 20px', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', fontSize: '12px', fontWeight: '600', color: '#6b7280' }}>
+                  <div>이름</div>
+                  <div>소속 기업</div>
+                  <div>핸드폰</div>
+                  <div>이메일</div>
+                  <div>상태</div>
+                  <div>관리</div>
+                </div>
+
+                {/* Body */}
+                {registeredUsers.map((user, idx) => (
+                  <div key={user.id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.2fr 1fr 1.5fr 1fr 180px', padding: '16px 20px', borderBottom: idx < registeredUsers.length - 1 ? '1px solid #e5e7eb' : 'none', alignItems: 'center' }}>
+                    <div style={{ fontWeight: '600', color: '#111827', fontSize: '14px' }}>{user.name}</div>
+                    <div style={{ color: '#6b7280', fontSize: '14px' }}>{user.company}</div>
+                    <div style={{ color: '#6b7280', fontSize: '13px' }}>{user.phone}</div>
+                    <div style={{ color: '#6b7280', fontSize: '13px' }}>{user.email}</div>
+                    <div>
+                      {user.status === 'pending' && (
+                        <span style={{ background: '#fef3c7', color: '#92400e', padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '600' }}>승인대기</span>
+                      )}
+                      {user.status === 'approved' && (
+                        <span style={{ background: '#d1fae5', color: '#065f46', padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '600' }}>승인완료</span>
+                      )}
+                      {user.status === 'rejected' && (
+                        <span style={{ background: '#fee2e2', color: '#991b1b', padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '600' }}>거부됨</span>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      {user.status === 'pending' && (
+                        <>
+                          <button
+                            onClick={() => handleUserApproval(user.id, 'approved')}
+                            style={{
+                              padding: '6px 14px',
+                              background: '#10b981',
+                              border: 'none',
+                              borderRadius: '6px',
+                              color: '#ffffff',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            승인
+                          </button>
+                          <button
+                            onClick={() => handleUserApproval(user.id, 'rejected')}
+                            style={{
+                              padding: '6px 14px',
+                              background: '#ef4444',
+                              border: 'none',
+                              borderRadius: '6px',
+                              color: '#ffffff',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            거부
+                          </button>
+                        </>
+                      )}
+                      {user.status === 'approved' && (
+                        <button
+                          onClick={() => handleUserApproval(user.id, 'rejected')}
+                          style={{
+                            padding: '6px 14px',
+                            background: '#f3f4f6',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '6px',
+                            color: '#6b7280',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          승인취소
+                        </button>
+                      )}
+                      {user.status === 'rejected' && (
+                        <button
+                          onClick={() => handleUserApproval(user.id, 'approved')}
+                          style={{
+                            padding: '6px 14px',
+                            background: '#10b981',
+                            border: 'none',
+                            borderRadius: '6px',
+                            color: '#ffffff',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          승인
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

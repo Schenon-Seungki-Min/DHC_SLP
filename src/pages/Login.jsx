@@ -84,11 +84,29 @@ export default function Login() {
       return;
     }
 
-    // TODO: 서버 연동 시 회원가입 API 호출
-    // POST /api/auth/signup
-    // { ...formData }
+    // 회원 정보를 localStorage에 저장 (승인 대기 상태)
+    const newUser = {
+      id: Date.now().toString(),
+      ...formData,
+      role: 'user',
+      status: 'pending', // 승인 대기
+      createdAt: new Date().toISOString()
+    };
 
-    alert('회원가입이 완료되었습니다!');
+    // 기존 회원 목록 가져오기
+    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+
+    // 이메일 중복 체크
+    if (registeredUsers.some(u => u.email === formData.email)) {
+      alert('이미 등록된 이메일입니다.');
+      return;
+    }
+
+    // 새 회원 추가
+    registeredUsers.push(newUser);
+    localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+
+    alert('회원가입이 완료되었습니다!\n관리자 승인 후 로그인이 가능합니다.');
     setShowSignupPopup(false);
     // Reset form
     setFormData({
