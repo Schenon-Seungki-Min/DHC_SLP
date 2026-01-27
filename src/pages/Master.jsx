@@ -7,20 +7,9 @@ const initialUsers = [
   { id: 3, username: 'user2', name: '박사원', role: 'user', email: 'user2@dhc.com', phone: '010-3333-4444', company: '(주)DHC', createdAt: '2024-03-01' },
 ];
 
-// Mock data for sales call logs
-const mockCallLogs = [
-  { id: 1, userId: 2, userName: '이영업', date: '2025-01-20', client: '서울수면클리닉', visitType: 'scheduled', products: ['SleepQ'], memo: '제품 설명 완료' },
-  { id: 2, userId: 2, userName: '이영업', date: '2025-01-20', client: '강남브레인의원', visitType: 'walkin', products: ['SleepQ'], memo: '샘플 전달' },
-  { id: 3, userId: 3, userName: '박사원', date: '2025-01-20', client: '분당숙면병원', visitType: 'scheduled', products: ['SleepQ'], memo: 'NECA 신청 안내' },
-  { id: 4, userId: 2, userName: '이영업', date: '2025-01-19', client: '인천꿈의원', visitType: 'scheduled', products: ['SleepQ'], memo: '계약 완료' },
-  { id: 5, userId: 3, userName: '박사원', date: '2025-01-19', client: '건강약국', visitType: 'walkin', products: ['GLP-OP'], memo: 'GLP 설명' },
-];
-
 export default function Master() {
-  const [activeTab, setActiveTab] = useState('accounts'); // 'accounts', 'callLogs', or 'companies'
+  const [activeTab, setActiveTab] = useState('accounts'); // 'accounts' or 'companies'
   const [users, setUsers] = useState(initialUsers);
-  const [callLogs] = useState(mockCallLogs);
-  const [selectedDate, setSelectedDate] = useState('2025-01-20');
 
   // Company management state
   const [companies, setCompanies] = useState(() => {
@@ -110,6 +99,13 @@ export default function Master() {
     }
   };
 
+  // 전체 콜플랜 다운로드 (모든 영업사원의 기록)
+  const handleDownloadAllCallPlans = () => {
+    alert('전체 콜 플랜 Excel 다운로드 기능\n(모든 영업사원의 활동 기록을 다운로드합니다)');
+    // TODO: 실제 구현 시 xlsx 라이브러리 사용하여 Excel 파일 생성
+    // 모든 기업의 모든 영업사원 콜 기록 포함
+  };
+
   const saveNewUser = () => {
     setUsers(prev => [...prev, {
       ...newUser,
@@ -140,15 +136,6 @@ export default function Master() {
       setUsers(prev => prev.filter(u => u.id !== userId));
     }
   };
-
-  // Filter call logs by date and exclude admin users
-  const filteredCallLogs = callLogs.filter(log => {
-    const user = users.find(u => u.id === log.userId);
-    return log.date === selectedDate && user && user.role !== 'admin';
-  });
-
-  // Get unique dates from call logs
-  const uniqueDates = [...new Set(callLogs.map(log => log.date))].sort((a, b) => b.localeCompare(a));
 
   return (
     <div style={{ padding: '32px' }}>
@@ -193,22 +180,6 @@ export default function Master() {
           >
             기업 관리
           </button>
-          <button
-            onClick={() => setActiveTab('callLogs')}
-            style={{
-              padding: '12px 24px',
-              background: 'none',
-              border: 'none',
-              borderBottom: activeTab === 'callLogs' ? '3px solid #3b82f6' : '3px solid transparent',
-              color: activeTab === 'callLogs' ? '#3b82f6' : '#6b7280',
-              fontSize: '15px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              marginBottom: '-2px'
-            }}
-          >
-            영업 활동 기록
-          </button>
         </div>
       </div>
 
@@ -217,21 +188,41 @@ export default function Master() {
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
             <p style={{ color: '#6b7280', fontSize: '14px', margin: 0 }}>{users.length}개 계정</p>
-            <button
-              onClick={() => setAddPopup(true)}
-              style={{
-                padding: '12px 24px',
-                background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-                border: 'none',
-                borderRadius: '10px',
-                color: '#fff',
-                fontWeight: '600',
-                cursor: 'pointer',
-                fontSize: '14px'
-              }}
-            >
-              + 계정 생성
-            </button>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={handleDownloadAllCallPlans}
+                style={{
+                  padding: '12px 20px',
+                  background: '#ffffff',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '10px',
+                  color: '#111827',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                📥 전체 콜 플랜 다운로드
+              </button>
+              <button
+                onClick={() => setAddPopup(true)}
+                style={{
+                  padding: '12px 24px',
+                  background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                  border: 'none',
+                  borderRadius: '10px',
+                  color: '#fff',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  fontSize: '14px'
+                }}
+              >
+                + 계정 생성
+              </button>
+            </div>
           </div>
 
           {/* Users Table */}
@@ -299,82 +290,6 @@ export default function Master() {
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-      )}
-
-      {/* Call Logs Tab */}
-      {activeTab === 'callLogs' && (
-        <div>
-          <div style={{ marginBottom: '24px', display: 'flex', gap: '16px', alignItems: 'center' }}>
-            <div>
-              <label style={{ color: '#6b7280', fontSize: '12px', marginBottom: '6px', display: 'block' }}>날짜 선택</label>
-              <select
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                style={{
-                  padding: '10px 16px',
-                  background: '#ffffff',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                  color: '#111827',
-                  fontSize: '14px',
-                  cursor: 'pointer',
-                  fontWeight: '500'
-                }}
-              >
-                {uniqueDates.map(date => (
-                  <option key={date} value={date}>{date}</option>
-                ))}
-              </select>
-            </div>
-            <div style={{ flex: 1, paddingTop: '22px' }}>
-              <p style={{ color: '#6b7280', fontSize: '14px', margin: 0 }}>
-                총 <span style={{ color: '#3b82f6', fontWeight: '600' }}>{filteredCallLogs.length}</span>건의 방문 기록
-              </p>
-            </div>
-          </div>
-
-          {/* Call Logs Table */}
-          <div style={{ background: '#ffffff', borderRadius: '16px', border: '1px solid #f3f4f6', overflow: 'hidden' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr 1fr 1.5fr 2fr', padding: '16px 24px', background: '#f9fafb', borderBottom: '1px solid #f3f4f6', fontSize: '13px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              <div>영업사원</div>
-              <div>거래처</div>
-              <div>방문 유형</div>
-              <div>제품</div>
-              <div>메모</div>
-            </div>
-
-            {filteredCallLogs.length === 0 ? (
-              <div style={{ padding: '60px 24px', textAlign: 'center', color: '#9ca3af' }}>
-                선택한 날짜에 영업 활동 기록이 없습니다.
-              </div>
-            ) : (
-              filteredCallLogs.map((log, i) => (
-                <div key={log.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr 1fr 1.5fr 2fr', padding: '18px 24px', borderBottom: i < filteredCallLogs.length - 1 ? '1px solid #f3f4f6' : 'none', alignItems: 'center' }}>
-                  <div style={{ fontWeight: '600', color: '#111827' }}>{log.userName}</div>
-                  <div style={{ color: '#111827' }}>{log.client}</div>
-                  <div>
-                    <span style={{
-                      padding: '4px 12px',
-                      borderRadius: '12px',
-                      fontSize: '11px',
-                      fontWeight: '600',
-                      background: log.visitType === 'scheduled' ? '#fef3c7' : '#dbeafe',
-                      color: log.visitType === 'scheduled' ? '#92400e' : '#1e40af'
-                    }}>
-                      {log.visitType === 'scheduled' ? '예정 방문' : '돌발 방문'}
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                    {log.products.map((p, idx) => (
-                      <span key={idx} style={{ background: '#f3f4f6', color: '#6b7280', padding: '2px 8px', borderRadius: '8px', fontSize: '11px' }}>{p}</span>
-                    ))}
-                  </div>
-                  <div style={{ color: '#6b7280', fontSize: '13px' }}>{log.memo || '-'}</div>
-                </div>
-              ))
-            )}
           </div>
         </div>
       )}
