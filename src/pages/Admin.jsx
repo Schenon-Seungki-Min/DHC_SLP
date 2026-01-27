@@ -22,6 +22,7 @@ export default function AdminDashboard() {
   ]);
   const [newPortfolioName, setNewPortfolioName] = useState('');
   const [editingPortfolio, setEditingPortfolio] = useState(null);
+  const [editingProduct, setEditingProduct] = useState(null); // { portfolioId, oldName, newName }
 
   // 협력사 관리
   const [partners, setPartners] = useState([
@@ -84,6 +85,17 @@ export default function AdminDashboard() {
     setPortfolios(prev => prev.map(p =>
       p.id === portfolioId ? { ...p, products: p.products.filter(prod => prod !== productName) } : p
     ));
+  };
+
+  const updateProductName = (portfolioId, oldName, newName) => {
+    if (!newName.trim()) return;
+    setPortfolios(prev => prev.map(p =>
+      p.id === portfolioId ? {
+        ...p,
+        products: p.products.map(prod => prod === oldName ? newName.trim() : prod)
+      } : p
+    ));
+    setEditingProduct(null);
   };
 
   // 협력사 관리 함수들
@@ -427,23 +439,92 @@ export default function AdminDashboard() {
                     <label style={{...labelStyle, marginBottom: '8px'}}>제공 제품</label>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
                       {portfolio.products.map(product => (
-                        <div key={product} style={{ background: '#ffffff', padding: '6px 12px', borderRadius: '20px', border: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={{ color: '#111827', fontSize: '13px' }}>{product}</span>
-                          <button
-                            onClick={() => removeProductFromPortfolio(portfolio.id, product)}
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              color: '#ef4444',
-                              cursor: 'pointer',
-                              padding: '0',
-                              fontSize: '14px',
-                              lineHeight: '1'
-                            }}
-                          >
-                            ×
-                          </button>
-                        </div>
+                        editingProduct?.portfolioId === portfolio.id && editingProduct?.oldName === product ? (
+                          // 수정 모드
+                          <div key={product} style={{ background: '#ffffff', padding: '6px 8px', borderRadius: '20px', border: '1px solid #3b82f6', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <input
+                              type="text"
+                              value={editingProduct.newName}
+                              onChange={(e) => setEditingProduct({...editingProduct, newName: e.target.value})}
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                  updateProductName(portfolio.id, product, editingProduct.newName);
+                                }
+                              }}
+                              style={{
+                                border: 'none',
+                                background: 'transparent',
+                                color: '#111827',
+                                fontSize: '13px',
+                                width: '100px',
+                                padding: '0',
+                                outline: 'none'
+                              }}
+                              autoFocus
+                            />
+                            <button
+                              onClick={() => updateProductName(portfolio.id, product, editingProduct.newName)}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                color: '#10b981',
+                                cursor: 'pointer',
+                                padding: '0',
+                                fontSize: '12px',
+                                fontWeight: '600'
+                              }}
+                            >
+                              ✓
+                            </button>
+                            <button
+                              onClick={() => setEditingProduct(null)}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                color: '#6b7280',
+                                cursor: 'pointer',
+                                padding: '0',
+                                fontSize: '14px',
+                                lineHeight: '1'
+                              }}
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ) : (
+                          // 일반 모드
+                          <div key={product} style={{ background: '#ffffff', padding: '6px 12px', borderRadius: '20px', border: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ color: '#111827', fontSize: '13px' }}>{product}</span>
+                            <button
+                              onClick={() => setEditingProduct({ portfolioId: portfolio.id, oldName: product, newName: product })}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                color: '#3b82f6',
+                                cursor: 'pointer',
+                                padding: '0',
+                                fontSize: '11px',
+                                fontWeight: '600'
+                              }}
+                            >
+                              수정
+                            </button>
+                            <button
+                              onClick={() => removeProductFromPortfolio(portfolio.id, product)}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                color: '#ef4444',
+                                cursor: 'pointer',
+                                padding: '0',
+                                fontSize: '14px',
+                                lineHeight: '1'
+                              }}
+                            >
+                              ×
+                            </button>
+                          </div>
+                        )
                       ))}
                     </div>
 

@@ -13,7 +13,7 @@ export default function PrivateRoute({ children, adminOnly = false, masterOnly =
     return <Navigate to="/dashboard" replace />;
   }
 
-  if (adminOnly && user.role !== 'admin') {
+  if (adminOnly && user.role !== 'admin' && user.role !== 'master') {
     return <Navigate to="/dashboard" replace />;
   }
 
