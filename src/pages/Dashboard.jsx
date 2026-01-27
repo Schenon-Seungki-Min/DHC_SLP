@@ -57,6 +57,7 @@ export default function ClientDashboard() {
   const [smsPopup, setSmsPopup] = useState(null);
   const [schedulePopup, setSchedulePopup] = useState(null);
   const [memoDetailPopup, setMemoDetailPopup] = useState(null);
+  const [visitRecordPopup, setVisitRecordPopup] = useState(null);
   const [newDate, setNewDate] = useState('');
   const [filterPortfolio, setFilterPortfolio] = useState('전체');
   const [filterType, setFilterType] = useState('전체');
@@ -65,6 +66,17 @@ export default function ClientDashboard() {
   const [filterDong, setFilterDong] = useState('전체');
   const [editingGrade, setEditingGrade] = useState(null);
   const [senderPhone, setSenderPhone] = useState('010-0000-0000');
+
+  // 방문 기록 상태
+  const [visitRecord, setVisitRecord] = useState({
+    date: new Date().toISOString().split('T')[0],
+    status: 'completed', // 'completed' or 'cancelled'
+    visitType: '예정 방문',
+    products: [],
+    memo: '',
+    cancelReason: '',
+    rescheduleDate: ''
+  });
 
   // localStorage에서 사용자 정보 불러오기
   useEffect(() => {
@@ -75,7 +87,65 @@ export default function ClientDashboard() {
     }
   }, []);
 
-  const closePopup = () => { setPopup({ type: null, data: null }); setSmsPopup(null); setSchedulePopup(null); setEditingGrade(null); setMemoDetailPopup(null); };
+  const closePopup = () => {
+    setPopup({ type: null, data: null });
+    setSmsPopup(null);
+    setSchedulePopup(null);
+    setEditingGrade(null);
+    setMemoDetailPopup(null);
+    setVisitRecordPopup(null);
+    setVisitRecord({
+      date: new Date().toISOString().split('T')[0],
+      status: 'completed',
+      visitType: '예정 방문',
+      products: [],
+      memo: '',
+      cancelReason: '',
+      rescheduleDate: ''
+    });
+  };
+
+  // 방문 기록 저장
+  const saveVisitRecord = () => {
+    if (!visitRecordPopup) return;
+
+    // 유효성 검사
+    if (visitRecord.status === 'completed') {
+      if (visitRecord.products.length === 0) {
+        alert('제공 제품을 선택해주세요.');
+        return;
+      }
+    } else if (visitRecord.status === 'cancelled') {
+      if (!visitRecord.cancelReason) {
+        alert('취소 사유를 선택해주세요.');
+        return;
+      }
+    }
+
+    // localStorage에서 기존 방문 기록 가져오기
+    const visitRecords = JSON.parse(localStorage.getItem('visitRecords') || '[]');
+
+    // 새 방문 기록 추가
+    const newRecord = {
+      id: Date.now().toString(),
+      date: visitRecord.date,
+      clientId: visitRecordPopup.id,
+      clientName: visitRecordPopup.name,
+      status: visitRecord.status,
+      visitType: visitRecord.status === 'completed' ? visitRecord.visitType : null,
+      products: visitRecord.status === 'completed' ? visitRecord.products : [],
+      memo: visitRecord.status === 'completed' ? visitRecord.memo : '',
+      cancelReason: visitRecord.status === 'cancelled' ? visitRecord.cancelReason : null,
+      rescheduleDate: visitRecord.status === 'cancelled' ? visitRecord.rescheduleDate : null,
+      createdAt: new Date().toISOString()
+    };
+
+    visitRecords.push(newRecord);
+    localStorage.setItem('visitRecords', JSON.stringify(visitRecords));
+
+    alert('방문 기록이 저장되었습니다.');
+    closePopup();
+  };
 
   const updateGrade = (clientId, newGrade) => {
     setClients(prev => prev.map(c => c.id === clientId ? { ...c, grade: newGrade } : c));
@@ -172,7 +242,7 @@ export default function ClientDashboard() {
       {/* Table */}
       <div style={{ background: '#ffffff', borderRadius: '16px', border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
         {/* Header Row */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.5fr 0.8fr 1fr 1.2fr 0.6fr 1fr', padding: '16px 24px', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', fontSize: '13px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.5fr 0.8fr 1fr 1.2fr 0.6fr 1fr 130px', padding: '16px 24px', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', fontSize: '13px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
           <div>거래처명</div>
           <div>주소</div>
           <div>의료진</div>
@@ -183,11 +253,12 @@ export default function ClientDashboard() {
             <GradeTooltip />
           </div>
           <div>방문예정일</div>
+          <div>방문기록</div>
         </div>
 
         {/* Data Rows */}
         {filteredClients.map((c, i) => (
-          <div key={c.id} style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.5fr 0.8fr 1fr 1.2fr 0.6fr 1fr', padding: '20px 24px', borderBottom: i < filteredClients.length - 1 ? '1px solid #f3f4f6' : 'none', alignItems: 'center', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = '#f3f4f6'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+          <div key={c.id} style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.5fr 0.8fr 1fr 1.2fr 0.6fr 1fr 130px', padding: '20px 24px', borderBottom: i < filteredClients.length - 1 ? '1px solid #f3f4f6' : 'none', alignItems: 'center', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = '#f3f4f6'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
             {/* 거래처명 + 유형 뱃지 + 제품 태그 */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -228,6 +299,25 @@ export default function ClientDashboard() {
             <div style={{ cursor: 'pointer' }} onClick={() => setSchedulePopup(c)}>
               <div style={{ color: c.scheduledVisit ? '#fbbf24' : '#9ca3af', fontSize: '14px', fontWeight: c.scheduledVisit ? '600' : 'normal' }}>{c.scheduledVisit || '-'}</div>
               <div style={{ color: '#9ca3af', fontSize: '12px', marginTop: '2px' }}>마지막 방문일: {c.lastVisit}</div>
+            </div>
+            {/* 방문 기록하기 버튼 */}
+            <div>
+              <button
+                onClick={() => setVisitRecordPopup(c)}
+                style={{
+                  padding: '8px 12px',
+                  background: 'linear-gradient(135deg, #10b981, #059669)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: '#ffffff',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                방문 기록하기
+              </button>
             </div>
           </div>
         ))}
@@ -447,6 +537,231 @@ export default function ClientDashboard() {
             <div style={{ background: '#f9fafb', borderRadius: '12px', padding: '20px', minHeight: '100px' }}>
               <p style={{ color: '#111827', margin: 0, lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>{memoDetailPopup.memo}</p>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Visit Record Popup */}
+      {visitRecordPopup && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: '#ffffff', borderRadius: '16px', padding: '32px', width: '550px', maxHeight: '80vh', overflowY: 'auto', border: '1px solid #f3f4f6', position: 'relative' }}>
+            <button onClick={closePopup} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#6b7280', fontSize: '24px', cursor: 'pointer' }}>×</button>
+            <h3 style={{ margin: '0 0 8px', color: '#111827' }}>방문 기록 등록</h3>
+            <p style={{ color: '#6b7280', margin: '0 0 24px', fontSize: '14px' }}>거래처: {visitRecordPopup.name}</p>
+
+            {/* 날짜 */}
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ color: '#6b7280', fontSize: '13px', marginBottom: '8px', display: 'block', fontWeight: '600' }}>날짜 *</label>
+              <input
+                type="date"
+                value={visitRecord.date}
+                onChange={(e) => setVisitRecord({ ...visitRecord, date: e.target.value })}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  background: '#f9fafb',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  color: '#111827',
+                  fontSize: '14px',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+
+            {/* 방문 상태 */}
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ color: '#6b7280', fontSize: '13px', marginBottom: '8px', display: 'block', fontWeight: '600' }}>방문 상태 *</label>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={() => setVisitRecord({ ...visitRecord, status: 'completed' })}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    background: visitRecord.status === 'completed' ? '#10b981' : '#f9fafb',
+                    border: visitRecord.status === 'completed' ? 'none' : '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    color: visitRecord.status === 'completed' ? '#ffffff' : '#6b7280',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  ✓ 방문 완료
+                </button>
+                <button
+                  onClick={() => setVisitRecord({ ...visitRecord, status: 'cancelled' })}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    background: visitRecord.status === 'cancelled' ? '#ef4444' : '#f9fafb',
+                    border: visitRecord.status === 'cancelled' ? 'none' : '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    color: visitRecord.status === 'cancelled' ? '#ffffff' : '#6b7280',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  ✗ 방문 취소
+                </button>
+              </div>
+            </div>
+
+            {/* 방문 취소 시 필드 */}
+            {visitRecord.status === 'cancelled' && (
+              <>
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ color: '#6b7280', fontSize: '13px', marginBottom: '8px', display: 'block', fontWeight: '600' }}>취소 사유 *</label>
+                  <select
+                    value={visitRecord.cancelReason}
+                    onChange={(e) => setVisitRecord({ ...visitRecord, cancelReason: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      background: '#f9fafb',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      color: '#111827',
+                      fontSize: '14px',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    <option value="">선택해주세요</option>
+                    <option value="고객 요청">고객 요청</option>
+                    <option value="일정 충돌">일정 충돌</option>
+                    <option value="긴급 업무">긴급 업무</option>
+                    <option value="병원 휴진">병원 휴진</option>
+                    <option value="기타">기타</option>
+                  </select>
+                </div>
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ color: '#6b7280', fontSize: '13px', marginBottom: '8px', display: 'block', fontWeight: '600' }}>재방문 예정일</label>
+                  <input
+                    type="date"
+                    value={visitRecord.rescheduleDate}
+                    onChange={(e) => setVisitRecord({ ...visitRecord, rescheduleDate: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      background: '#f9fafb',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      color: '#111827',
+                      fontSize: '14px',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+              </>
+            )}
+
+            {/* 방문 완료 시 필드 */}
+            {visitRecord.status === 'completed' && (
+              <>
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ color: '#6b7280', fontSize: '13px', marginBottom: '8px', display: 'block', fontWeight: '600' }}>방문 유형 *</label>
+                  <select
+                    value={visitRecord.visitType}
+                    onChange={(e) => setVisitRecord({ ...visitRecord, visitType: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      background: '#f9fafb',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      color: '#111827',
+                      fontSize: '14px',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    <option value="예정 방문">예정 방문</option>
+                    <option value="돌발 방문">돌발 방문</option>
+                  </select>
+                </div>
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ color: '#6b7280', fontSize: '13px', marginBottom: '8px', display: 'block', fontWeight: '600' }}>제공 제품 *</label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {visitRecordPopup.products.map((product) => {
+                      const isSelected = visitRecord.products.includes(product);
+                      return (
+                        <button
+                          key={product}
+                          onClick={() => {
+                            if (isSelected) {
+                              setVisitRecord({
+                                ...visitRecord,
+                                products: visitRecord.products.filter(p => p !== product)
+                              });
+                            } else {
+                              setVisitRecord({
+                                ...visitRecord,
+                                products: [...visitRecord.products, product]
+                              });
+                            }
+                          }}
+                          style={{
+                            padding: '8px 16px',
+                            background: isSelected ? '#4338ca' : '#f9fafb',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '20px',
+                            color: isSelected ? '#ffffff' : '#6b7280',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                          }}
+                        >
+                          {product}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ color: '#6b7280', fontSize: '13px', marginBottom: '8px', display: 'block', fontWeight: '600' }}>메모</label>
+                  <textarea
+                    value={visitRecord.memo}
+                    onChange={(e) => setVisitRecord({ ...visitRecord, memo: e.target.value })}
+                    placeholder="방문 내용을 입력하세요..."
+                    style={{
+                      width: '100%',
+                      minHeight: '100px',
+                      padding: '12px',
+                      background: '#f9fafb',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      color: '#111827',
+                      fontSize: '14px',
+                      resize: 'vertical',
+                      boxSizing: 'border-box',
+                      fontFamily: 'inherit'
+                    }}
+                  />
+                </div>
+              </>
+            )}
+
+            {/* 저장 버튼 */}
+            <button
+              onClick={saveVisitRecord}
+              style={{
+                width: '100%',
+                padding: '14px',
+                background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                border: 'none',
+                borderRadius: '10px',
+                color: '#ffffff',
+                fontSize: '15px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'transform 0.2s'
+              }}
+            >
+              등록
+            </button>
           </div>
         </div>
       )}
