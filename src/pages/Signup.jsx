@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth, companies } from '../contexts/AuthContext';
 
 export default function Signup() {
   const navigate = useNavigate();
+  const { signup } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     company: '',
@@ -18,6 +20,7 @@ export default function Signup() {
     code: '',
     inputCode: ''
   });
+  const [signupComplete, setSignupComplete] = useState(false);
 
   const inputStyle = {
     width: '100%',
@@ -73,14 +76,99 @@ export default function Signup() {
       return;
     }
 
+    if (!formData.company) {
+      alert('소속 기업을 선택해주세요.');
+      return;
+    }
+
     if (formData.password !== formData.passwordConfirm) {
       alert('비밀번호가 일치하지 않습니다.');
       return;
     }
 
-    alert('회원가입이 완료되었습니다!');
-    navigate('/login');
+    if (formData.password.length < 6) {
+      alert('비밀번호는 6자 이상이어야 합니다.');
+      return;
+    }
+
+    // 회원가입 신청
+    const result = signup({
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      company: formData.company,
+      password: formData.password,
+      address: formData.address
+    });
+
+    if (result.success) {
+      setSignupComplete(true);
+    }
   };
+
+  // 회원가입 완료 화면 (승인 대기)
+  if (signupComplete) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        padding: '40px 20px'
+      }}>
+        <div style={{
+          background: '#ffffff',
+          borderRadius: '20px',
+          padding: '48px',
+          width: '100%',
+          maxWidth: '500px',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: '64px', marginBottom: '24px' }}>⏳</div>
+          <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#111827', margin: '0 0 16px' }}>
+            회원가입 신청 완료
+          </h1>
+          <p style={{ color: '#6b7280', fontSize: '15px', lineHeight: '1.6', margin: '0 0 32px' }}>
+            회원가입 신청이 완료되었습니다.<br/>
+            소속 기업 관리자의 <strong style={{ color: '#667eea' }}>승인 후</strong> 로그인이 가능합니다.<br/>
+            승인까지 1~2 영업일 소요될 수 있습니다.
+          </p>
+          <div style={{
+            background: '#f3f4f6',
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '32px'
+          }}>
+            <p style={{ margin: '0 0 8px', color: '#6b7280', fontSize: '13px' }}>신청 정보</p>
+            <p style={{ margin: '0', color: '#111827', fontWeight: '600' }}>
+              {formData.name} ({formData.email})
+            </p>
+            <p style={{ margin: '4px 0 0', color: '#6b7280', fontSize: '14px' }}>
+              {companies.find(c => c.id === formData.company)?.name}
+            </p>
+          </div>
+          <button
+            onClick={() => navigate('/login')}
+            style={{
+              width: '100%',
+              padding: '14px',
+              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+              border: 'none',
+              borderRadius: '10px',
+              color: '#ffffff',
+              fontSize: '15px',
+              fontWeight: '600',
+              cursor: 'pointer'
+            }}
+          >
+            로그인 페이지로 이동
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{
@@ -104,6 +192,28 @@ export default function Signup() {
           <p style={{ color: '#6b7280', fontSize: '14px', margin: 0 }}>DHC SLP 계정을 만드세요</p>
         </div>
 
+        {/* 승인 안내 배너 */}
+        <div style={{
+          background: '#fef3c7',
+          border: '1px solid #f59e0b',
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: '24px',
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: '12px'
+        }}>
+          <span style={{ fontSize: '20px' }}>⚠️</span>
+          <div>
+            <p style={{ margin: '0 0 4px', fontWeight: '600', color: '#92400e', fontSize: '14px' }}>
+              관리자 승인 필요
+            </p>
+            <p style={{ margin: 0, color: '#a16207', fontSize: '13px' }}>
+              회원가입 후 소속 기업 관리자의 승인을 받아야 로그인할 수 있습니다.
+            </p>
+          </div>
+        </div>
+
         <form onSubmit={handleSignup}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
             <div>
@@ -112,7 +222,17 @@ export default function Signup() {
             </div>
             <div>
               <label style={labelStyle}>소속 기업 *</label>
-              <input type="text" value={formData.company} onChange={(e) => setFormData({ ...formData, company: e.target.value })} placeholder="(주)DHC" style={inputStyle} required />
+              <select 
+                value={formData.company} 
+                onChange={(e) => setFormData({ ...formData, company: e.target.value })} 
+                style={{...inputStyle, cursor: 'pointer'}}
+                required
+              >
+                <option value="">선택하세요</option>
+                {companies.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
             </div>
           </div>
 
@@ -149,15 +269,15 @@ export default function Signup() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
             <div>
               <label style={labelStyle}>비밀번호 *</label>
-              <input type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} placeholder="8자 이상" style={inputStyle} required />
+              <input type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} placeholder="6자 이상" style={inputStyle} required />
             </div>
             <div>
               <label style={labelStyle}>비밀번호 확인 *</label>
-              <input type="password" value={formData.passwordConfirm} onChange={(e) => setFormData({ ...formData, passwordConfirm: e.target.value })} placeholder="8자 이상" style={inputStyle} required />
+              <input type="password" value={formData.passwordConfirm} onChange={(e) => setFormData({ ...formData, passwordConfirm: e.target.value })} placeholder="6자 이상" style={inputStyle} required />
             </div>
           </div>
 
-          <button type="submit" style={{ width: '100%', padding: '14px', background: 'linear-gradient(135deg, #667eea, #764ba2)', border: 'none', borderRadius: '10px', color: '#ffffff', fontSize: '15px', fontWeight: '600', cursor: 'pointer', marginBottom: '16px', transition: 'transform 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}>회원가입</button>
+          <button type="submit" style={{ width: '100%', padding: '14px', background: 'linear-gradient(135deg, #667eea, #764ba2)', border: 'none', borderRadius: '10px', color: '#ffffff', fontSize: '15px', fontWeight: '600', cursor: 'pointer', marginBottom: '16px', transition: 'transform 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}>회원가입 신청</button>
 
           <div style={{ textAlign: 'center' }}>
             <span style={{ color: '#6b7280', fontSize: '14px' }}>이미 계정이 있으신가요?</span>
