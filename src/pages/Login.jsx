@@ -7,6 +7,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [showSignupPopup, setShowSignupPopup] = useState(false);
+  const [showResetPasswordPopup, setShowResetPasswordPopup] = useState(false);
   const navigate = useNavigate();
   const { user, login } = useAuth();
 
@@ -36,6 +37,91 @@ export default function Login() {
     code: '',
     inputCode: ''
   });
+
+  // Password reset state
+  const [resetPasswordData, setResetPasswordData] = useState({
+    email: '',
+    verificationCode: '',
+    inputCode: '',
+    verified: false,
+    newPassword: '',
+    newPasswordConfirm: ''
+  });
+
+  // Password reset functions
+  const handleSendResetCode = () => {
+    if (!resetPasswordData.email) {
+      alert('이메일 주소를 입력해주세요.');
+      return;
+    }
+
+    // Check if email exists in registered users
+    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+    const userExists = registeredUsers.some(u => u.email === resetPasswordData.email);
+
+    if (!userExists) {
+      alert('등록되지 않은 이메일입니다.');
+      return;
+    }
+
+    const mockCode = Math.floor(100000 + Math.random() * 900000).toString();
+    setResetPasswordData({
+      ...resetPasswordData,
+      verificationCode: mockCode
+    });
+    alert('인증 코드가 이메일로 발송되었습니다. (데모용 코드: ' + mockCode + ')');
+  };
+
+  const handleVerifyResetCode = () => {
+    if (resetPasswordData.inputCode === resetPasswordData.verificationCode) {
+      setResetPasswordData({
+        ...resetPasswordData,
+        verified: true
+      });
+      alert('이메일 인증이 완료되었습니다. 새 비밀번호를 입력해주세요.');
+    } else {
+      alert('인증 코드가 올바르지 않습니다.');
+    }
+  };
+
+  const handleResetPassword = (e) => {
+    e.preventDefault();
+
+    if (!resetPasswordData.verified) {
+      alert('이메일 인증을 먼저 완료해주세요.');
+      return;
+    }
+
+    if (resetPasswordData.newPassword !== resetPasswordData.newPasswordConfirm) {
+      alert('비밀번호가 일치하지 않습니다.');
+      return;
+    }
+
+    if (resetPasswordData.newPassword.length < 8) {
+      alert('비밀번호는 8자 이상이어야 합니다.');
+      return;
+    }
+
+    // Update password in localStorage
+    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+    const updatedUsers = registeredUsers.map(u =>
+      u.email === resetPasswordData.email
+        ? { ...u, password: resetPasswordData.newPassword }
+        : u
+    );
+    localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers));
+
+    alert('비밀번호가 성공적으로 변경되었습니다.\n새 비밀번호로 로그인해주세요.');
+    setShowResetPasswordPopup(false);
+    setResetPasswordData({
+      email: '',
+      verificationCode: '',
+      inputCode: '',
+      verified: false,
+      newPassword: '',
+      newPasswordConfirm: ''
+    });
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -219,6 +305,16 @@ export default function Login() {
             로그인
           </button>
 
+          <div style={{ textAlign: 'center', marginTop: '16px' }}>
+            <button
+              type="button"
+              onClick={() => setShowResetPasswordPopup(true)}
+              style={{ background: 'none', border: 'none', color: '#6b7280', fontSize: '14px', cursor: 'pointer', textDecoration: 'underline' }}
+            >
+              비밀번호 찾기
+            </button>
+          </div>
+
           <button
             type="button"
             onClick={() => setShowSignupPopup(true)}
@@ -336,6 +432,137 @@ export default function Login() {
               <button type="submit" style={{ width: '100%', padding: '14px', background: 'linear-gradient(135deg, #667eea, #764ba2)', border: 'none', borderRadius: '10px', color: '#ffffff', fontSize: '15px', fontWeight: '600', cursor: 'pointer', transition: 'transform 0.2s' }}>
                 회원가입
               </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Password Popup */}
+      {showResetPasswordPopup && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#ffffff', borderRadius: '20px', padding: '40px', width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto', position: 'relative', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+            <button onClick={() => setShowResetPasswordPopup(false)} style={{ position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', color: '#6b7280', fontSize: '28px', cursor: 'pointer', lineHeight: '1' }}>×</button>
+
+            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+              <h2 style={{ fontSize: '28px', fontWeight: '700', color: '#111827', margin: '0 0 8px' }}>비밀번호 재설정</h2>
+              <p style={{ color: '#6b7280', fontSize: '14px', margin: 0 }}>가입한 이메일로 인증 후 새 비밀번호를 설정하세요</p>
+            </div>
+
+            <form onSubmit={handleResetPassword}>
+              {/* 이메일 입력 */}
+              <div style={{ marginBottom: '16px' }}>
+                <label style={labelStyle}>이메일 주소 *</label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    type="email"
+                    value={resetPasswordData.email}
+                    onChange={(e) => setResetPasswordData({ ...resetPasswordData, email: e.target.value })}
+                    placeholder="example@domain.com"
+                    style={{ ...signupInputStyle, flex: 1 }}
+                    disabled={resetPasswordData.verified}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSendResetCode}
+                    disabled={resetPasswordData.verified || !resetPasswordData.email}
+                    style={{
+                      padding: '12px 20px',
+                      background: resetPasswordData.verified ? '#10b981' : '#667eea',
+                      border: 'none',
+                      borderRadius: '8px',
+                      color: '#ffffff',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      cursor: resetPasswordData.verified ? 'not-allowed' : 'pointer',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    {resetPasswordData.verified ? '✓ 인증완료' : '인증코드 발송'}
+                  </button>
+                </div>
+              </div>
+
+              {/* 인증 코드 입력 */}
+              {resetPasswordData.verificationCode && !resetPasswordData.verified && (
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={labelStyle}>인증 코드</label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                      type="text"
+                      value={resetPasswordData.inputCode}
+                      onChange={(e) => setResetPasswordData({ ...resetPasswordData, inputCode: e.target.value })}
+                      placeholder="6자리 인증 코드"
+                      style={{ ...signupInputStyle, flex: 1 }}
+                      maxLength={6}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleVerifyResetCode}
+                      style={{
+                        padding: '12px 20px',
+                        background: '#667eea',
+                        border: 'none',
+                        borderRadius: '8px',
+                        color: '#ffffff',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      인증 확인
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* 새 비밀번호 입력 (인증 완료 후) */}
+              {resetPasswordData.verified && (
+                <>
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={labelStyle}>새 비밀번호 *</label>
+                    <input
+                      type="password"
+                      value={resetPasswordData.newPassword}
+                      onChange={(e) => setResetPasswordData({ ...resetPasswordData, newPassword: e.target.value })}
+                      placeholder="8자 이상"
+                      style={signupInputStyle}
+                      required
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: '24px' }}>
+                    <label style={labelStyle}>새 비밀번호 확인 *</label>
+                    <input
+                      type="password"
+                      value={resetPasswordData.newPasswordConfirm}
+                      onChange={(e) => setResetPasswordData({ ...resetPasswordData, newPasswordConfirm: e.target.value })}
+                      placeholder="8자 이상"
+                      style={signupInputStyle}
+                      required
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    style={{
+                      width: '100%',
+                      padding: '14px',
+                      background: 'linear-gradient(135deg, #10b981, #059669)',
+                      border: 'none',
+                      borderRadius: '10px',
+                      color: '#ffffff',
+                      fontSize: '15px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'transform 0.2s'
+                    }}
+                  >
+                    비밀번호 변경
+                  </button>
+                </>
+              )}
             </form>
           </div>
         </div>
