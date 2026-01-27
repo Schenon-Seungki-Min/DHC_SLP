@@ -162,12 +162,9 @@ export default function MapRoutePlanner() {
       try {
         const records = JSON.parse(savedVisitRecords);
         setVisitRecords(records);
-        console.log('📋 방문 기록 로드됨:', records);
       } catch (e) {
         console.error('Failed to load visitRecords:', e);
       }
-    } else {
-      console.log('📋 방문 기록 없음');
     }
   }, []);
 
@@ -180,7 +177,6 @@ export default function MapRoutePlanner() {
           try {
             const records = JSON.parse(savedVisitRecords);
             setVisitRecords(records);
-            console.log('🔄 방문 기록 새로고침:', records);
           } catch (e) {
             console.error('Failed to reload visitRecords:', e);
           }
@@ -197,7 +193,6 @@ export default function MapRoutePlanner() {
   // 특정 날짜와 거래처의 방문 상태 확인
   const getVisitStatus = (clientId, date) => {
     const record = visitRecords.find(r => r.clientId === clientId && r.date === date);
-    console.log(`🔍 방문 상태 확인 - 거래처 ID: ${clientId}, 날짜: ${date}, 상태:`, record?.status || '기록없음');
     if (!record) return null;
     return record.status; // 'completed' or 'cancelled'
   };
@@ -353,15 +348,6 @@ export default function MapRoutePlanner() {
             const pos = toPos(c.lat, c.lng);
             const inPlan = isInDatePlan(c.id);
             const isHovered = hoveredId === c.id;
-            const visitStatus = getVisitStatus(c.id, selectedDate);
-
-            // 방문 상태에 따른 배경색 결정
-            let markerBg = '#ffffff'; // 기본: 빈 원 (방문 기록 없음)
-            if (visitStatus === 'completed') {
-              markerBg = '#10b981'; // 초록색: 방문 완료
-            } else if (visitStatus === 'cancelled') {
-              markerBg = '#ef4444'; // 빨간색: 방문 취소
-            }
 
             return (
               <div key={c.id} onClick={() => toggleDatePlan(c.id)} onMouseEnter={() => setHoveredId(c.id)} onMouseLeave={() => setHoveredId(null)}
@@ -370,7 +356,7 @@ export default function MapRoutePlanner() {
                   width: inPlan ? '28px' : '22px',
                   height: inPlan ? '28px' : '22px',
                   borderRadius: '50%',
-                  background: markerBg,
+                  background: '#ffffff',
                   border: c.isMyClient ? '3px solid #111827' : '2px solid #9ca3af',
                   boxShadow: isHovered ? '0 0 20px rgba(59,130,246,0.8)' : '0 2px 8px rgba(0,0,0,0.3)',
                   transition: 'all 0.2s',
@@ -379,7 +365,7 @@ export default function MapRoutePlanner() {
                   justifyContent: 'center',
                   fontSize: inPlan ? '14px' : '11px',
                   fontWeight: '700',
-                  color: visitStatus ? '#ffffff' : '#111827' // 방문 기록이 있으면 흰색 텍스트
+                  color: '#111827'
                 }}>
                   {c.grade}
                 </div>
@@ -388,11 +374,6 @@ export default function MapRoutePlanner() {
                     <div style={{ fontWeight: '600', color: '#111827' }}>{c.name}</div>
                     <div style={{ color: '#6b7280', fontSize: '11px' }}>{c.address}</div>
                     <div style={{ color: '#6b7280', fontSize: '11px', marginTop: '4px' }}>그레이드: {c.grade}</div>
-                    {visitStatus && (
-                      <div style={{ color: visitStatus === 'completed' ? '#10b981' : '#ef4444', fontSize: '11px', marginTop: '4px', fontWeight: '600' }}>
-                        {visitStatus === 'completed' ? '✓ 방문 완료' : '✗ 방문 취소'}
-                      </div>
-                    )}
                   </div>
                 )}
               </div>
@@ -401,38 +382,22 @@ export default function MapRoutePlanner() {
 
           {/* 범례 */}
           <div style={{ position: 'absolute', bottom: '16px', left: '16px', background: '#f9fafb', padding: '12px 16px', borderRadius: '12px', fontSize: '12px', border: '1px solid #f3f4f6' }}>
-            <div style={{ fontWeight: '600', color: '#111827', marginBottom: '8px' }}>방문 상태</div>
+            <div style={{ fontWeight: '600', color: '#111827', marginBottom: '8px' }}>그레이드</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-              <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#ffffff', border: '2px solid #9ca3af' }}></div>
-              <span style={{ color: '#6b7280' }}>기록 없음</span>
+              <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#ffffff', border: '2px solid #111827', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '700' }}>A</div>
+              <span style={{ color: '#6b7280' }}>월 3회 이상</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-              <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#10b981', border: '2px solid #9ca3af' }}></div>
-              <span style={{ color: '#6b7280' }}>방문 완료</span>
+              <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#ffffff', border: '2px solid #9ca3af', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '700' }}>B</div>
+              <span style={{ color: '#6b7280' }}>월 2회</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-              <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#ef4444', border: '2px solid #9ca3af' }}></div>
-              <span style={{ color: '#6b7280' }}>방문 취소</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+              <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#ffffff', border: '2px solid #9ca3af', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '700' }}>C</div>
+              <span style={{ color: '#6b7280' }}>월 1회</span>
             </div>
-
-            <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '12px', marginTop: '8px' }}>
-              <div style={{ fontWeight: '600', color: '#111827', marginBottom: '8px' }}>그레이드</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#ffffff', border: '2px solid #111827', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '700' }}>A</div>
-                <span style={{ color: '#6b7280' }}>월 3회 이상</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#ffffff', border: '2px solid #9ca3af', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '700' }}>B</div>
-                <span style={{ color: '#6b7280' }}>월 2회</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#ffffff', border: '2px solid #9ca3af', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '700' }}>C</div>
-                <span style={{ color: '#6b7280' }}>월 1회</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#ffffff', border: '2px solid #9ca3af', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '700' }}>D</div>
-                <span style={{ color: '#6b7280' }}>필요시</span>
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#ffffff', border: '2px solid #9ca3af', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '700' }}>D</div>
+              <span style={{ color: '#6b7280' }}>필요시</span>
             </div>
           </div>
         </div>
@@ -440,7 +405,23 @@ export default function MapRoutePlanner() {
         {/* Date-based Visit List Panel */}
         <div style={{ background: '#ffffff', borderRadius: '16px', border: '1px solid #f3f4f6', padding: '24px', height: '600px', display: 'flex', flexDirection: 'column', position: 'relative' }}>
           <h3 style={{ margin: '0 0 4px', color: '#111827', fontSize: '18px' }}>{formatDateKorean(selectedDate)}</h3>
-          <p style={{ color: '#6b7280', fontSize: '13px', margin: '0 0 20px' }}>{todayClients.length}개 방문 예정</p>
+          <p style={{ color: '#6b7280', fontSize: '13px', margin: '0 0 12px' }}>{todayClients.length}개 방문 예정</p>
+
+          {/* 방문 상태 범례 */}
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', padding: '10px', background: '#f9fafb', borderRadius: '8px', fontSize: '11px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <div style={{ width: '14px', height: '14px', borderRadius: '50%', background: '#ffffff', border: '2px solid #9ca3af' }}></div>
+              <span style={{ color: '#6b7280' }}>기록없음</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <div style={{ width: '14px', height: '14px', borderRadius: '50%', background: '#10b981' }}></div>
+              <span style={{ color: '#6b7280' }}>완료</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <div style={{ width: '14px', height: '14px', borderRadius: '50%', background: '#ef4444' }}></div>
+              <span style={{ color: '#6b7280' }}>취소</span>
+            </div>
+          </div>
 
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
             {todayClients.length === 0 ? (
@@ -449,46 +430,65 @@ export default function MapRoutePlanner() {
                 지도에서 병원을 클릭하거나<br/>대시보드에서 방문일을 설정하세요
               </div>
             ) : (
-              todayClients.map((c, i) => (
-                <div key={c.id} style={{ background: '#f9fafb', borderRadius: '12px', padding: '14px', position: 'relative' }}>
-                  {!isDateConfirmed && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleDatePlan(c.id);
-                      }}
-                      style={{
-                        position: 'absolute',
-                        top: '8px',
-                        right: '8px',
-                        background: 'none',
-                        border: 'none',
-                        color: '#9ca3af',
-                        cursor: 'pointer',
-                        fontSize: '18px',
-                        padding: '4px',
-                        lineHeight: '1',
-                        transition: 'color 0.2s'
-                      }}
-                      onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
-                      onMouseLeave={e => e.currentTarget.style.color = '#9ca3af'}
-                    >
-                      ×
-                    </button>
-                  )}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                    <span style={{
-                      background: c.scheduledVisit === selectedDate ? '#fbbf24' : '#4ade80',
-                      color: '#f9fafb',
-                      width: '20px',
-                      height: '20px',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '11px',
-                      fontWeight: '700'
-                    }}>{i + 1}</span>
+              todayClients.map((c, i) => {
+                const visitStatus = getVisitStatus(c.id, selectedDate);
+
+                // 방문 상태에 따른 숫자 배경색 결정
+                let numberBg = '#ffffff'; // 기본: 빈 원 (방문 기록 없음)
+                let numberColor = '#111827'; // 기본: 검은색 텍스트
+                let numberBorder = '2px solid #9ca3af'; // 회색 테두리
+
+                if (visitStatus === 'completed') {
+                  numberBg = '#10b981'; // 초록색: 방문 완료
+                  numberColor = '#ffffff';
+                  numberBorder = 'none';
+                } else if (visitStatus === 'cancelled') {
+                  numberBg = '#ef4444'; // 빨간색: 방문 취소
+                  numberColor = '#ffffff';
+                  numberBorder = 'none';
+                }
+
+                return (
+                  <div key={c.id} style={{ background: '#f9fafb', borderRadius: '12px', padding: '14px', position: 'relative' }}>
+                    {!isDateConfirmed && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleDatePlan(c.id);
+                        }}
+                        style={{
+                          position: 'absolute',
+                          top: '8px',
+                          right: '8px',
+                          background: 'none',
+                          border: 'none',
+                          color: '#9ca3af',
+                          cursor: 'pointer',
+                          fontSize: '18px',
+                          padding: '4px',
+                          lineHeight: '1',
+                          transition: 'color 0.2s'
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
+                        onMouseLeave={e => e.currentTarget.style.color = '#9ca3af'}
+                      >
+                        ×
+                      </button>
+                    )}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{
+                        background: numberBg,
+                        color: numberColor,
+                        border: numberBorder,
+                        width: '20px',
+                        height: '20px',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '11px',
+                        fontWeight: '700'
+                      }}>{i + 1}</span>
                     <span style={{ color: '#111827', fontWeight: '600', fontSize: '14px' }}>{c.name}</span>
                     {c.scheduledVisit === selectedDate && (
                       <span style={{ fontSize: '10px', color: '#fbbf24', background: '#fef3c7', padding: '2px 6px', borderRadius: '6px' }}>예약</span>
@@ -506,7 +506,8 @@ export default function MapRoutePlanner() {
                     </div>
                   </div>
                 </div>
-              ))
+                );
+              })
             )}
           </div>
 
