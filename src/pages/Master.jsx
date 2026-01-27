@@ -17,10 +17,28 @@ const mockCallLogs = [
 ];
 
 export default function Master() {
-  const [activeTab, setActiveTab] = useState('accounts'); // 'accounts' or 'callLogs'
+  const [activeTab, setActiveTab] = useState('accounts'); // 'accounts', 'callLogs', or 'companies'
   const [users, setUsers] = useState(initialUsers);
   const [callLogs] = useState(mockCallLogs);
   const [selectedDate, setSelectedDate] = useState('2025-01-20');
+
+  // Company management state
+  const [companies, setCompanies] = useState(() => {
+    const saved = localStorage.getItem('companies');
+    return saved ? JSON.parse(saved) : [
+      { id: 'dhc', name: '(주)DHC' },
+      { id: 'samsung', name: '삼성제약' },
+      { id: 'lg', name: 'LG생명과학' }
+    ];
+  });
+  const [companyPopup, setCompanyPopup] = useState(false);
+  const [editingCompany, setEditingCompany] = useState(null);
+  const [newCompanyName, setNewCompanyName] = useState('');
+
+  // Save companies to localStorage
+  React.useEffect(() => {
+    localStorage.setItem('companies', JSON.stringify(companies));
+  }, [companies]);
 
   // Account management state
   const [editPopup, setEditPopup] = useState(null);
@@ -59,6 +77,37 @@ export default function Master() {
     setEditPopup(null);
     setAddPopup(false);
     setConfirmPopup(null);
+    setCompanyPopup(false);
+    setEditingCompany(null);
+    setNewCompanyName('');
+  };
+
+  // Company management functions
+  const addCompany = () => {
+    if (!newCompanyName.trim()) {
+      alert('기업명을 입력해주세요.');
+      return;
+    }
+    const newCompany = {
+      id: Date.now().toString(),
+      name: newCompanyName.trim()
+    };
+    setCompanies(prev => [...prev, newCompany]);
+    setNewCompanyName('');
+    alert('기업이 추가되었습니다.');
+  };
+
+  const updateCompany = (id, newName) => {
+    if (!newName.trim()) return;
+    setCompanies(prev => prev.map(c => c.id === id ? { ...c, name: newName.trim() } : c));
+    setEditingCompany(null);
+    alert('기업명이 수정되었습니다.');
+  };
+
+  const deleteCompany = (id) => {
+    if (window.confirm('이 기업을 삭제하시겠습니까?\n해당 기업 소속 직원들의 정보는 유지됩니다.')) {
+      setCompanies(prev => prev.filter(c => c.id !== id));
+    }
   };
 
   const saveNewUser = () => {
@@ -127,6 +176,22 @@ export default function Master() {
             }}
           >
             계정 관리
+          </button>
+          <button
+            onClick={() => setActiveTab('companies')}
+            style={{
+              padding: '12px 24px',
+              background: 'none',
+              border: 'none',
+              borderBottom: activeTab === 'companies' ? '3px solid #3b82f6' : '3px solid transparent',
+              color: activeTab === 'companies' ? '#3b82f6' : '#6b7280',
+              fontSize: '15px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              marginBottom: '-2px'
+            }}
+          >
+            기업 관리
           </button>
           <button
             onClick={() => setActiveTab('callLogs')}
@@ -310,6 +375,162 @@ export default function Master() {
                 </div>
               ))
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Companies Tab */}
+      {activeTab === 'companies' && (
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <p style={{ color: '#6b7280', fontSize: '14px', margin: 0 }}>{companies.length}개 기업</p>
+          </div>
+
+          {/* Companies Table */}
+          <div style={{ background: '#ffffff', borderRadius: '16px', border: '1px solid #f3f4f6', overflow: 'hidden' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '60px 2fr 200px', padding: '16px 24px', background: '#f9fafb', borderBottom: '1px solid #f3f4f6', fontSize: '13px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <div>No.</div>
+              <div>기업명</div>
+              <div>관리</div>
+            </div>
+
+            {companies.map((company, i) => (
+              <div key={company.id} style={{ display: 'grid', gridTemplateColumns: '60px 2fr 200px', padding: '18px 24px', borderBottom: i < companies.length - 1 ? '1px solid #f3f4f6' : 'none', alignItems: 'center' }}>
+                <div style={{ color: '#9ca3af', fontSize: '14px' }}>{i + 1}</div>
+                <div>
+                  {editingCompany === company.id ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <input
+                        type="text"
+                        defaultValue={company.name}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            updateCompany(company.id, e.target.value);
+                          }
+                        }}
+                        style={{
+                          ...inputStyle,
+                          flex: 1,
+                          padding: '8px 12px'
+                        }}
+                        autoFocus
+                        id={`edit-${company.id}`}
+                      />
+                      <button
+                        onClick={() => {
+                          const input = document.getElementById(`edit-${company.id}`);
+                          updateCompany(company.id, input.value);
+                        }}
+                        style={{
+                          padding: '6px 12px',
+                          background: '#10b981',
+                          border: 'none',
+                          borderRadius: '6px',
+                          color: '#ffffff',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        ✓
+                      </button>
+                      <button
+                        onClick={() => setEditingCompany(null)}
+                        style={{
+                          padding: '6px 12px',
+                          background: '#f3f4f6',
+                          border: 'none',
+                          borderRadius: '6px',
+                          color: '#6b7280',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        취소
+                      </button>
+                    </div>
+                  ) : (
+                    <span style={{ fontWeight: '600', color: '#111827', fontSize: '15px' }}>{company.name}</span>
+                  )}
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {editingCompany !== company.id && (
+                    <>
+                      <button
+                        onClick={() => setEditingCompany(company.id)}
+                        style={{
+                          padding: '6px 12px',
+                          background: '#dbeafe',
+                          border: 'none',
+                          borderRadius: '6px',
+                          color: '#1e40af',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        수정
+                      </button>
+                      <button
+                        onClick={() => deleteCompany(company.id)}
+                        style={{
+                          padding: '6px 12px',
+                          background: '#fee2e2',
+                          border: 'none',
+                          borderRadius: '6px',
+                          color: '#991b1b',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        삭제
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {/* Add Company Row */}
+            <div style={{ display: 'grid', gridTemplateColumns: '60px 2fr 200px', padding: '18px 24px', background: '#f9fafb', alignItems: 'center' }}>
+              <div></div>
+              <div>
+                <input
+                  type="text"
+                  value={newCompanyName}
+                  onChange={(e) => setNewCompanyName(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      addCompany();
+                    }
+                  }}
+                  placeholder="새 기업명 입력..."
+                  style={{
+                    ...inputStyle,
+                    padding: '8px 12px'
+                  }}
+                />
+              </div>
+              <div>
+                <button
+                  onClick={addCompany}
+                  style={{
+                    padding: '8px 16px',
+                    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: '#ffffff',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    cursor: 'pointer'
+                  }}
+                >
+                  + 기업 추가
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

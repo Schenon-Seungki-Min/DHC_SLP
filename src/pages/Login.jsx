@@ -14,12 +14,22 @@ export default function Login() {
   const [formData, setFormData] = useState({
     name: '',
     company: '',
+    companySelect: '', // 드롭다운 선택값
     phone: '',
     email: '',
     password: '',
     passwordConfirm: '',
     address: ''
   });
+  const [companies, setCompanies] = useState([]);
+
+  // Load companies from localStorage
+  React.useEffect(() => {
+    const saved = localStorage.getItem('companies');
+    if (saved) {
+      setCompanies(JSON.parse(saved));
+    }
+  }, [showSignupPopup]);
   const [emailVerification, setEmailVerification] = useState({
     sent: false,
     verified: false,
@@ -85,9 +95,15 @@ export default function Login() {
     }
 
     // 회원 정보를 localStorage에 저장 (승인 대기 상태)
+    const finalCompany = formData.companySelect === 'other' ? formData.company : formData.companySelect;
     const newUser = {
       id: Date.now().toString(),
-      ...formData,
+      name: formData.name,
+      company: finalCompany,
+      phone: formData.phone,
+      email: formData.email,
+      password: formData.password,
+      address: formData.address,
       role: 'user',
       status: 'pending', // 승인 대기
       createdAt: new Date().toISOString()
@@ -112,6 +128,7 @@ export default function Login() {
     setFormData({
       name: '',
       company: '',
+      companySelect: '',
       phone: '',
       email: '',
       password: '',
@@ -246,9 +263,34 @@ export default function Login() {
                 </div>
                 <div>
                   <label style={labelStyle}>소속 기업 *</label>
-                  <input type="text" value={formData.company} onChange={(e) => setFormData({ ...formData, company: e.target.value })} placeholder="(주)DHC" style={signupInputStyle} required />
+                  <select
+                    value={formData.companySelect}
+                    onChange={(e) => setFormData({ ...formData, companySelect: e.target.value, company: '' })}
+                    style={signupInputStyle}
+                    required
+                  >
+                    <option value="">선택해주세요</option>
+                    {companies.map(c => (
+                      <option key={c.id} value={c.name}>{c.name}</option>
+                    ))}
+                    <option value="other">기타 (직접 입력)</option>
+                  </select>
                 </div>
               </div>
+
+              {formData.companySelect === 'other' && (
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={labelStyle}>기업명 입력 *</label>
+                  <input
+                    type="text"
+                    value={formData.company}
+                    onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                    placeholder="기업명을 입력하세요"
+                    style={signupInputStyle}
+                    required
+                  />
+                </div>
+              )}
 
               <div style={{ marginBottom: '16px' }}>
                 <label style={labelStyle}>핸드폰 번호 *</label>
