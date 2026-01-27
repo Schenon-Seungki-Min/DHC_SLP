@@ -23,6 +23,7 @@ export default function AdminDashboard() {
   const [newPortfolioName, setNewPortfolioName] = useState('');
   const [editingPortfolio, setEditingPortfolio] = useState(null);
   const [editingProduct, setEditingProduct] = useState(null); // { portfolioId, oldName, newName }
+  const [editingPortfolioName, setEditingPortfolioName] = useState(null); // { portfolioId, name }
 
   // 협력사 관리
   const [partners, setPartners] = useState([
@@ -96,6 +97,14 @@ export default function AdminDashboard() {
       } : p
     ));
     setEditingProduct(null);
+  };
+
+  const updatePortfolioName = (portfolioId, newName) => {
+    if (!newName.trim()) return;
+    setPortfolios(prev => prev.map(p =>
+      p.id === portfolioId ? { ...p, name: newName.trim() } : p
+    ));
+    setEditingPortfolioName(null);
   };
 
   // 협력사 관리 함수들
@@ -416,22 +425,95 @@ export default function AdminDashboard() {
               {portfolios.map(portfolio => (
                 <div key={portfolio.id} style={{ background: '#f9fafb', borderRadius: '12px', padding: '20px', marginBottom: '16px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                    <h4 style={{ margin: 0, color: '#111827', fontSize: '16px', fontWeight: '600' }}>{portfolio.name}</h4>
-                    <button
-                      onClick={() => deletePortfolio(portfolio.id)}
-                      style={{
-                        background: '#fee2e2',
-                        border: 'none',
-                        borderRadius: '6px',
-                        color: '#ef4444',
-                        padding: '6px 12px',
-                        cursor: 'pointer',
-                        fontSize: '12px',
-                        fontWeight: '600'
-                      }}
-                    >
-                      삭제
-                    </button>
+                    {editingPortfolioName?.portfolioId === portfolio.id ? (
+                      // 포트폴리오명 수정 모드
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+                        <input
+                          type="text"
+                          value={editingPortfolioName.name}
+                          onChange={(e) => setEditingPortfolioName({...editingPortfolioName, name: e.target.value})}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              updatePortfolioName(portfolio.id, editingPortfolioName.name);
+                            }
+                          }}
+                          style={{
+                            ...inputStyle,
+                            fontSize: '16px',
+                            fontWeight: '600',
+                            flex: 1
+                          }}
+                          autoFocus
+                        />
+                        <button
+                          onClick={() => updatePortfolioName(portfolio.id, editingPortfolioName.name)}
+                          style={{
+                            background: '#10b981',
+                            border: 'none',
+                            borderRadius: '6px',
+                            color: '#ffffff',
+                            padding: '6px 12px',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                            fontWeight: '600'
+                          }}
+                        >
+                          ✓
+                        </button>
+                        <button
+                          onClick={() => setEditingPortfolioName(null)}
+                          style={{
+                            background: '#f3f4f6',
+                            border: 'none',
+                            borderRadius: '6px',
+                            color: '#6b7280',
+                            padding: '6px 12px',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                            fontWeight: '600'
+                          }}
+                        >
+                          취소
+                        </button>
+                      </div>
+                    ) : (
+                      // 일반 모드
+                      <>
+                        <h4 style={{ margin: 0, color: '#111827', fontSize: '16px', fontWeight: '600' }}>{portfolio.name}</h4>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button
+                            onClick={() => setEditingPortfolioName({ portfolioId: portfolio.id, name: portfolio.name })}
+                            style={{
+                              background: '#dbeafe',
+                              border: 'none',
+                              borderRadius: '6px',
+                              color: '#3b82f6',
+                              padding: '6px 12px',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              fontWeight: '600'
+                            }}
+                          >
+                            수정
+                          </button>
+                          <button
+                            onClick={() => deletePortfolio(portfolio.id)}
+                            style={{
+                              background: '#fee2e2',
+                              border: 'none',
+                              borderRadius: '6px',
+                              color: '#ef4444',
+                              padding: '6px 12px',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              fontWeight: '600'
+                            }}
+                          >
+                            삭제
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   {/* 포트폴리오별 제품 목록 */}
@@ -493,21 +575,22 @@ export default function AdminDashboard() {
                           </div>
                         ) : (
                           // 일반 모드
-                          <div key={product} style={{ background: '#ffffff', padding: '6px 12px', borderRadius: '20px', border: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <div key={product} style={{ background: '#ffffff', padding: '6px 12px', borderRadius: '20px', border: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: '4px' }}>
                             <span style={{ color: '#111827', fontSize: '13px' }}>{product}</span>
                             <button
                               onClick={() => setEditingProduct({ portfolioId: portfolio.id, oldName: product, newName: product })}
                               style={{
                                 background: 'none',
                                 border: 'none',
-                                color: '#3b82f6',
+                                color: '#6b7280',
                                 cursor: 'pointer',
-                                padding: '0',
-                                fontSize: '11px',
-                                fontWeight: '600'
+                                padding: '0 2px',
+                                fontSize: '12px',
+                                lineHeight: '1'
                               }}
+                              title="제품명 수정"
                             >
-                              수정
+                              ✏️
                             </button>
                             <button
                               onClick={() => removeProductFromPortfolio(portfolio.id, product)}
