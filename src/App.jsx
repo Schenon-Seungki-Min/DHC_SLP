@@ -11,6 +11,7 @@ import MapPlanner from './pages/MapPlanner';
 import Admin from './pages/Admin';
 import Master from './pages/Master';
 import AccountSettings from './pages/AccountSettings';
+import ApiTest from './pages/ApiTest';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/api-test" element={<ApiTest />} />
 
           <Route path="/dashboard" element={
             <PrivateRoute>
