@@ -234,3 +234,66 @@ SELECT id, '김원장', '010-1234-5678', 'kim@sleep.kr', true FROM clients WHERE
 
 INSERT INTO staff (client_id, name, phone, email, is_representative)
 SELECT id, '박약사', '010-8888-9999', 'park@pharm.kr', true FROM clients WHERE name = '건강약국';
+
+-- ========================================
+-- Phase 0: Backend Migration 추가 스키마
+-- ========================================
+
+-- 1. 회원 가입 승인 테이블 (User Registration Approval)
+CREATE TABLE user_registrations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  email TEXT NOT NULL UNIQUE,
+  phone TEXT,
+  company TEXT,
+  address TEXT,
+  password TEXT NOT NULL, -- Supabase Auth 승인 전까지 임시 저장
+  status TEXT NOT NULL CHECK (status IN ('pending', 'approved', 'rejected')) DEFAULT 'pending',
+  role TEXT NOT NULL DEFAULT 'user',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  approved_by UUID REFERENCES auth.users(id),
+  approved_at TIMESTAMPTZ
+);
+
+-- 2. visit_logs 테이블에 방문 상태 추적 필드 추가
+ALTER TABLE visit_logs
+ADD COLUMN products JSONB DEFAULT '[]'::jsonb,
+ADD COLUMN status TEXT CHECK (status IN ('completed', 'cancelled')) DEFAULT 'completed',
+ADD COLUMN visit_type TEXT,
+ADD COLUMN cancel_reason TEXT,
+ADD COLUMN reschedule_date DATE;
+
+-- 3. route_plans 테이블에 확정 상태 추가
+ALTER TABLE route_plans
+ADD COLUMN status TEXT CHECK (status IN ('planned', 'confirmed')) DEFAULT 'planned';
+
+-- 추가 인덱스 생성
+CREATE INDEX idx_user_registrations_status ON user_registrations(status);
+CREATE INDEX idx_user_registrations_email ON user_registrations(email);
+CREATE INDEX idx_visit_logs_status ON visit_logs(status);
+CREATE INDEX idx_visit_logs_date ON visit_logs(visit_date);
+CREATE INDEX idx_route_plans_status ON route_plans(status);
+CREATE INDEX idx_route_plans_date ON route_plans(planned_date);
+
+-- RLS 정책 추가
+ALTER TABLE user_registrations ENABLE ROW LEVEL SECURITY;
+
+-- Admin만 회원 가입 신청 목록 조회 가능
+CREATE POLICY "Only admins can view user registrations"
+  ON user_registrations FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM user_profiles
+      WHERE id = auth.uid() AND role = 'admin'
+    )
+  );
+
+-- Admin만 회원 승인/거부 가능
+CREATE POLICY "Only admins can update user registrations"
+  ON user_registrations FOR UPDATE
+  USING (
+    EXISTS (
+      SELECT 1 FROM user_profiles
+      WHERE id = auth.uid() AND role = 'admin'
+    )
+  );
