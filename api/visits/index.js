@@ -42,7 +42,7 @@ export default async function handler(req, res) {
         .select(`
           *,
           client:clients(id, name, type, address, phone),
-          user:user_profiles!visit_logs_user_id_fkey(id, name),
+          user:user_profiles!visit_logs_user_profile_fkey(id, name),
           partner:partners(id, name)
         `)
         .order('visit_date', { ascending: false });
@@ -162,7 +162,7 @@ export default async function handler(req, res) {
         .select(`
           *,
           client:clients(id, name, type, address, phone),
-          user:user_profiles!visit_logs_user_id_fkey(id, name),
+          user:user_profiles!visit_logs_user_profile_fkey(id, name),
           partner:partners(id, name)
         `)
         .single();
@@ -227,7 +227,7 @@ export default async function handler(req, res) {
         .select(`
           *,
           client:clients(id, name, type, address, phone),
-          user:user_profiles!visit_logs_user_id_fkey(id, name),
+          user:user_profiles!visit_logs_user_profile_fkey(id, name),
           partner:partners(id, name)
         `)
         .single();

@@ -43,7 +43,7 @@ export default async function handler(req, res) {
         .select(`
           *,
           client:clients(id, name, type, address, phone, latitude, longitude),
-          user:user_profiles!route_plans_user_id_fkey(id, name, partner_id)
+          user:user_profiles!route_plans_user_profile_fkey(id, name, partner_id)
         `)
         .order('planned_date', { ascending: true })
         .order('sort_order', { ascending: true });

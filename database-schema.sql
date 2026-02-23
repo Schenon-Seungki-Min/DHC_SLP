@@ -267,13 +267,24 @@ ADD COLUMN reschedule_date DATE;
 ALTER TABLE route_plans
 ADD COLUMN status TEXT CHECK (status IN ('planned', 'confirmed')) DEFAULT 'planned';
 
+-- 4. visit_logs, route_plans → user_profiles 직접 FK 추가 (Supabase JOIN용)
+ALTER TABLE visit_logs
+ADD CONSTRAINT visit_logs_user_profile_fkey
+  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE;
+
+ALTER TABLE route_plans
+ADD CONSTRAINT route_plans_user_profile_fkey
+  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE;
+
 -- 추가 인덱스 생성
 CREATE INDEX idx_user_registrations_status ON user_registrations(status);
 CREATE INDEX idx_user_registrations_email ON user_registrations(email);
 CREATE INDEX idx_visit_logs_status ON visit_logs(status);
 CREATE INDEX idx_visit_logs_date ON visit_logs(visit_date);
+CREATE INDEX idx_visit_logs_partner_id ON visit_logs(partner_id);
 CREATE INDEX idx_route_plans_status ON route_plans(status);
 CREATE INDEX idx_route_plans_date ON route_plans(planned_date);
+CREATE INDEX idx_route_plans_user_id ON route_plans(user_id);
 
 -- RLS 정책 추가
 ALTER TABLE user_registrations ENABLE ROW LEVEL SECURITY;
