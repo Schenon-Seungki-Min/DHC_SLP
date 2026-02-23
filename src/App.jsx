@@ -4,10 +4,14 @@ import { AuthProvider } from './contexts/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
 import Layout from './components/Layout';
 import Login from './pages/Login';
+import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import AllHospitals from './pages/AllHospitals';
 import MapPlanner from './pages/MapPlanner';
 import Admin from './pages/Admin';
+import Master from './pages/Master';
+import AccountSettings from './pages/AccountSettings';
+import ApiTest from './pages/ApiTest';
 
 function App() {
   return (
@@ -15,6 +19,8 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/api-test" element={<ApiTest />} />
 
           <Route path="/dashboard" element={
             <PrivateRoute>
@@ -40,7 +46,23 @@ function App() {
             </PrivateRoute>
           } />
 
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/master" element={
+            <PrivateRoute masterOnly>
+              <Layout><Master /></Layout>
+            </PrivateRoute>
+          } />
+
+          <Route path="/account-settings" element={
+            <PrivateRoute>
+              <Layout><AccountSettings /></Layout>
+            </PrivateRoute>
+          } />
+
+          <Route path="/" element={
+            <PrivateRoute>
+              <Navigate to="/dashboard" replace />
+            </PrivateRoute>
+          } />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

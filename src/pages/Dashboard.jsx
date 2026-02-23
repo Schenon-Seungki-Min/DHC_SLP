@@ -1,86 +1,403 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-const hospitals = [
-  { id: 1, name: '서울수면클리닉', address: '서울시 강남구 테헤란로 123', doctor: '김수면', otherDoctors: ['이진료', '박상담'], phone: '010-1234-5678', email: 'seoul@sleep.kr', lastVisit: '2024-12-20', neca: '2024-06-15', partners: [{name: 'A파트너', date: '2024-12-20'}, {name: 'B파트너', date: '2024-12-18'}] },
-  { id: 2, name: '강남브레인의원', address: '서울시 강남구 역삼동 456', doctor: '이두뇌', otherDoctors: ['최신경'], phone: '010-2345-6789', email: 'brain@clinic.kr', lastVisit: '2024-12-18', neca: '2024-07-20', partners: [{name: 'A파트너', date: '2024-12-18'}] },
-  { id: 3, name: '분당숙면병원', address: '경기도 성남시 분당구 정자동 789', doctor: '박숙면', otherDoctors: [], phone: '010-3456-7890', email: 'bundang@sleep.kr', lastVisit: '2024-12-15', neca: '2024-08-10', partners: [{name: 'C파트너', date: '2024-12-15'}, {name: 'A파트너', date: '2024-12-10'}] },
-  { id: 4, name: '인천꿈의원', address: '인천시 연수구 송도동 321', doctor: '정꿈나라', otherDoctors: ['한밤잠', '오숙면'], phone: '010-4567-8901', email: 'dream@incheon.kr', lastVisit: '2024-12-22', neca: null, partners: [{name: 'B파트너', date: '2024-12-22'}] },
+const initialClients = [
+  { id: 1, name: '서울수면클리닉', type: 'hospital', portfolio: 'sleepq', address: '서울시 강남구 테헤란로 123, 5층 501호', city: '서울시', district: '강남구', dong: '테헤란로', staff: '김수면', otherStaff: ['이진료', '박상담'], phone: '010-1234-5678', email: 'seoul@sleep.kr', lastVisit: '2024-12-20', scheduledVisit: '2025-01-15', grade: 'A', memo: 'NECA 등록 완료. 처방 안정적', memoIsPublic: true, notes: 'NECA 등록일: 2024-06-15\n처방중', products: ['SleepQ'], partners: [{name: 'A파트너', date: '2024-12-20', products: ['SleepQ'], memo: '제품 설명 완료'}, {name: 'B파트너', date: '2024-12-18', products: ['SleepQ'], memo: '샘플 전달'}] },
+  { id: 2, name: '강남브레인의원', type: 'hospital', portfolio: 'sleepq', address: '서울시 강남구 역삼동 456, 메디컬타워 3층', city: '서울시', district: '강남구', dong: '역삼동', staff: '이두뇌', otherStaff: ['최신경'], phone: '010-2345-6789', email: 'brain@clinic.kr', lastVisit: '2024-12-18', scheduledVisit: null, grade: 'B', memo: '관심 높음. 다음 방문 시 샘플 제공 예정', memoIsPublic: false, notes: 'NECA 등록일: 2024-07-20\n처방중', products: ['SleepQ'], partners: [{name: 'A파트너', date: '2024-12-18', products: ['SleepQ'], memo: ''}] },
+  { id: 3, name: '분당숙면병원', type: 'hospital', portfolio: 'sleepq', address: '경기도 성남시 분당구 정자동 789, 힐링빌딩 2층', city: '경기도', district: '성남시', dong: '분당구', staff: '박숙면', otherStaff: [], phone: '010-3456-7890', email: 'bundang@sleep.kr', lastVisit: '2024-12-15', scheduledVisit: '2025-01-20', grade: 'C', memo: 'NECA 신청 검토 중', memoIsPublic: true, notes: 'NECA 등록일: 2024-08-10', products: ['SleepQ'], partners: [{name: 'C파트너', date: '2024-12-15', products: ['SleepQ'], memo: 'NECA 신청 안내'}, {name: 'A파트너', date: '2024-12-10', products: ['SleepQ'], memo: ''}] },
+  { id: 4, name: '인천꿈의원', type: 'hospital', portfolio: 'sleepq', address: '인천시 연수구 송도동 321, 드림타워 10층 1001호', city: '인천시', district: '연수구', dong: '송도동', staff: '정꿈나라', otherStaff: ['한밤잠', '오숙면'], phone: '010-4567-8901', email: 'dream@incheon.kr', lastVisit: '2024-12-22', scheduledVisit: '2025-01-10', grade: 'A', memo: '계약 체결 완료', memoIsPublic: false, notes: '미등록', products: ['SleepQ'], partners: [{name: 'B파트너', date: '2024-12-22', products: ['SleepQ'], memo: '계약 완료'}] },
+  { id: 5, name: '건강약국', type: 'pharmacy', portfolio: 'coaching', team: 'south_east', address: '서울시 송파구 잠실동 100, 롯데타워 지하 1층', city: '서울시', district: '송파구', dong: '잠실동', staff: '박약사', otherStaff: [], phone: '010-5555-6666', email: 'health@pharm.kr', lastVisit: '2024-12-19', scheduledVisit: '2025-01-18', grade: 'B', memo: 'GLP 비만 관리 서비스 관심', memoIsPublic: true, notes: '서비스 유형: GLP-OP', products: ['GLP-OP', 'CGM'], partners: [{name: 'D파트너', date: '2024-12-19', products: ['GLP-OP'], memo: 'GLP 설명'}] },
 ];
 
-export default function HospitalDashboard() {
+function GradeTooltip() {
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  return (
+    <div
+      style={{ position: 'relative', display: 'inline-block' }}
+      onMouseEnter={() => setShowTooltip(true)}
+      onMouseLeave={() => setShowTooltip(false)}
+    >
+      <span style={{ cursor: 'help', color: '#9ca3af', fontSize: '14px' }}>?</span>
+      {showTooltip && (
+        <div style={{
+          position: 'absolute',
+          bottom: '100%',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          marginBottom: '8px',
+          padding: '8px 12px',
+          background: '#111827',
+          color: '#ffffff',
+          borderRadius: '6px',
+          fontSize: '11px',
+          whiteSpace: 'nowrap',
+          zIndex: 1000
+        }}>
+          A: 월 3회 이상 | B: 월 2회 | C: 월 1회 | D: 필요시
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: 0,
+            height: 0,
+            borderLeft: '6px solid transparent',
+            borderRight: '6px solid transparent',
+            borderTop: '6px solid #111827'
+          }} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function ClientDashboard() {
+  const [clients, setClients] = useState(initialClients);
   const [popup, setPopup] = useState({ type: null, data: null });
   const [smsPopup, setSmsPopup] = useState(null);
   const [schedulePopup, setSchedulePopup] = useState(null);
+  const [memoDetailPopup, setMemoDetailPopup] = useState(null);
+  const [visitRecordPopup, setVisitRecordPopup] = useState(null);
   const [newDate, setNewDate] = useState('');
+  const [filterPortfolio, setFilterPortfolio] = useState('전체');
+  const [filterType, setFilterType] = useState('전체');
+  const [filterCity, setFilterCity] = useState('전체');
+  const [filterDistrict, setFilterDistrict] = useState('전체');
+  const [filterDong, setFilterDong] = useState('전체');
+  const [editingGrade, setEditingGrade] = useState(null);
+  const [senderPhone, setSenderPhone] = useState('010-0000-0000');
 
-  const closePopup = () => { setPopup({ type: null, data: null }); setSmsPopup(null); setSchedulePopup(null); };
+  // 방문 기록 상태
+  const [visitRecord, setVisitRecord] = useState({
+    date: new Date().toISOString().split('T')[0],
+    status: 'completed', // 'completed' or 'cancelled'
+    visitType: '예정 방문',
+    products: [],
+    memo: '',
+    cancelReason: '',
+    rescheduleDate: ''
+  });
+
+  // 전체 제품 리스트
+  const allProducts = ['SleepQ', 'GLP-OP', 'CGM'];
+
+  // localStorage에서 사용자 정보 불러오기
+  useEffect(() => {
+    const userAccount = localStorage.getItem('userAccount');
+    if (userAccount) {
+      const userData = JSON.parse(userAccount);
+      setSenderPhone(userData.phone || '010-0000-0000');
+    }
+  }, []);
+
+  const closePopup = () => {
+    setPopup({ type: null, data: null });
+    setSmsPopup(null);
+    setSchedulePopup(null);
+    setEditingGrade(null);
+    setMemoDetailPopup(null);
+    setVisitRecordPopup(null);
+    setVisitRecord({
+      date: new Date().toISOString().split('T')[0],
+      status: 'completed',
+      visitType: '예정 방문',
+      products: [],
+      memo: '',
+      cancelReason: '',
+      rescheduleDate: ''
+    });
+  };
+
+  // 방문 기록 저장
+  const saveVisitRecord = () => {
+    if (!visitRecordPopup) return;
+
+    // 유효성 검사
+    if (visitRecord.status === 'completed') {
+      if (visitRecord.products.length === 0) {
+        alert('제공 제품을 선택해주세요.');
+        return;
+      }
+    } else if (visitRecord.status === 'cancelled') {
+      if (!visitRecord.cancelReason) {
+        alert('취소 사유를 선택해주세요.');
+        return;
+      }
+    }
+
+    // localStorage에서 기존 방문 기록 가져오기
+    const visitRecords = JSON.parse(localStorage.getItem('visitRecords') || '[]');
+
+    // 새 방문 기록 추가
+    const newRecord = {
+      id: Date.now().toString(),
+      date: visitRecord.date,
+      clientId: visitRecordPopup.id,
+      clientName: visitRecordPopup.name,
+      status: visitRecord.status,
+      visitType: visitRecord.status === 'completed' ? visitRecord.visitType : null,
+      products: visitRecord.status === 'completed' ? visitRecord.products : [],
+      memo: visitRecord.status === 'completed' ? visitRecord.memo : '',
+      cancelReason: visitRecord.status === 'cancelled' ? visitRecord.cancelReason : null,
+      rescheduleDate: visitRecord.status === 'cancelled' ? visitRecord.rescheduleDate : null,
+      createdAt: new Date().toISOString()
+    };
+
+    visitRecords.push(newRecord);
+    localStorage.setItem('visitRecords', JSON.stringify(visitRecords));
+
+    alert('방문 기록이 저장되었습니다.');
+    closePopup();
+  };
+
+  const updateGrade = (clientId, newGrade) => {
+    setClients(prev => prev.map(c => c.id === clientId ? { ...c, grade: newGrade } : c));
+    setEditingGrade(null);
+  };
+
+  const toggleMemoVisibility = (clientId) => {
+    setClients(prev => prev.map(c => c.id === clientId ? { ...c, memoIsPublic: !c.memoIsPublic } : c));
+  };
 
   const today = new Date().toISOString().split('T')[0];
+
+  // 주소 필터 옵션 생성 (cascading)
+  const uniqueCities = ['전체', ...new Set(clients.map(c => c.city))];
+  const uniqueDistricts = ['전체', ...new Set(
+    clients.filter(c => filterCity === '전체' || c.city === filterCity).map(c => c.district)
+  )];
+  const uniqueDongs = ['전체', ...new Set(
+    clients.filter(c => {
+      if (filterCity !== '전체' && c.city !== filterCity) return false;
+      if (filterDistrict !== '전체' && c.district !== filterDistrict) return false;
+      return true;
+    }).map(c => c.dong)
+  )];
+
+  // 필터링 로직
+  const filteredClients = clients.filter(c => {
+    if (filterPortfolio !== '전체' && c.portfolio !== filterPortfolio) return false;
+    if (filterType !== '전체' && c.type !== filterType) return false;
+    if (filterCity !== '전체' && c.city !== filterCity) return false;
+    if (filterDistrict !== '전체' && c.district !== filterDistrict) return false;
+    if (filterDong !== '전체' && c.dong !== filterDong) return false;
+    return true;
+  });
+
+  // 주소 필터 변경 핸들러 (cascading reset)
+  const handleCityChange = (city) => {
+    setFilterCity(city);
+    setFilterDistrict('전체');
+    setFilterDong('전체');
+  };
+
+  const handleDistrictChange = (district) => {
+    setFilterDistrict(district);
+    setFilterDong('전체');
+  };
 
   return (
     <div style={{ padding: '32px' }}>
       {/* Header */}
-      <div style={{ marginBottom: '32px' }}>
+      <div style={{ marginBottom: '24px' }}>
         <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#111827', margin: 0 }}>내고객</h1>
-        <p style={{ color: '#6b7280', marginTop: '4px', fontSize: '14px' }}>{hospitals.length}개 병원</p>
+        <p style={{ color: '#6b7280', marginTop: '4px', fontSize: '14px' }}>{filteredClients.length}개 거래처</p>
+      </div>
+
+      {/* Filters */}
+      <div style={{ marginBottom: '24px', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+        <div>
+          <label style={{ color: '#6b7280', fontSize: '12px', marginBottom: '6px', display: 'block' }}>포트폴리오</label>
+          <select value={filterPortfolio} onChange={e => setFilterPortfolio(e.target.value)} style={{ padding: '8px 12px', background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', color: '#111827', fontSize: '14px', cursor: 'pointer' }}>
+            <option value="전체">전체</option>
+            <option value="sleepq">SleepQ</option>
+            <option value="coaching">코칭서비스</option>
+          </select>
+        </div>
+        <div>
+          <label style={{ color: '#6b7280', fontSize: '12px', marginBottom: '6px', display: 'block' }}>거래처 유형</label>
+          <select value={filterType} onChange={e => setFilterType(e.target.value)} style={{ padding: '8px 12px', background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', color: '#111827', fontSize: '14px', cursor: 'pointer' }}>
+            <option value="전체">전체</option>
+            <option value="hospital">병원</option>
+            <option value="pharmacy">약국</option>
+          </select>
+        </div>
+        <div>
+          <label style={{ color: '#6b7280', fontSize: '12px', marginBottom: '6px', display: 'block' }}>시/도</label>
+          <select value={filterCity} onChange={e => handleCityChange(e.target.value)} style={{ padding: '8px 12px', background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', color: '#111827', fontSize: '14px', cursor: 'pointer' }}>
+            {uniqueCities.map((city, i) => <option key={i} value={city}>{city}</option>)}
+          </select>
+        </div>
+        <div>
+          <label style={{ color: '#6b7280', fontSize: '12px', marginBottom: '6px', display: 'block' }}>시/군/구</label>
+          <select value={filterDistrict} onChange={e => handleDistrictChange(e.target.value)} style={{ padding: '8px 12px', background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', color: '#111827', fontSize: '14px', cursor: 'pointer' }}>
+            {uniqueDistricts.map((district, i) => <option key={i} value={district}>{district}</option>)}
+          </select>
+        </div>
+        <div>
+          <label style={{ color: '#6b7280', fontSize: '12px', marginBottom: '6px', display: 'block' }}>읍/면/동</label>
+          <select value={filterDong} onChange={e => setFilterDong(e.target.value)} style={{ padding: '8px 12px', background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', color: '#111827', fontSize: '14px', cursor: 'pointer' }}>
+            {uniqueDongs.map((dong, i) => <option key={i} value={dong}>{dong}</option>)}
+          </select>
+        </div>
       </div>
 
       {/* Table */}
       <div style={{ background: '#ffffff', borderRadius: '16px', border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
         {/* Header Row */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 2fr 1fr 1.2fr 1.5fr 1fr', padding: '16px 24px', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', fontSize: '13px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-          <div>병원명</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.5fr 0.8fr 1fr 1.2fr 0.6fr 1fr 130px', padding: '16px 24px', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', fontSize: '13px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          <div>거래처명</div>
           <div>주소</div>
-          <div>처방의사</div>
-          <div>연락처</div>
+          <div>의료진</div>
+          <div>전화번호</div>
           <div>이메일</div>
-          <div>최종방문</div>
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+            그레이드
+            <GradeTooltip />
+          </div>
+          <div>방문예정일</div>
+          <div>방문기록</div>
         </div>
 
         {/* Data Rows */}
-        {hospitals.map((h, i) => (
-          <div key={h.id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 2fr 1fr 1.2fr 1.5fr 1fr', padding: '20px 24px', borderBottom: i < hospitals.length - 1 ? '1px solid #f3f4f6' : 'none', alignItems: 'center', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = '#f3f4f6'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-            <div style={{ fontWeight: '600', color: '#111827', cursor: 'pointer' }} onClick={() => setPopup({ type: 'neca', data: h })}>{h.name}</div>
-            <div style={{ color: '#6b7280', fontSize: '14px', cursor: 'pointer' }} onClick={() => window.open(`https://map.kakao.com/link/search/${encodeURIComponent(h.address)}`)}>{h.address}</div>
-            <div style={{ color: '#38bdf8', cursor: 'pointer' }} onClick={() => setPopup({ type: 'doctors', data: h })}>{h.doctor}</div>
-            <div style={{ color: '#4ade80', cursor: 'pointer', fontFamily: 'monospace' }} onClick={() => setSmsPopup(h)}>{h.phone}</div>
-            <div style={{ color: '#a78bfa', cursor: 'pointer', fontSize: '14px' }} onClick={() => window.location.href = `mailto:${h.email}`}>{h.email}</div>
-            <div style={{ color: '#fbbf24', cursor: 'pointer' }} onClick={() => setSchedulePopup(h)}>{h.lastVisit}</div>
+        {filteredClients.map((c, i) => (
+          <div key={c.id} style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.5fr 0.8fr 1fr 1.2fr 0.6fr 1fr 130px', padding: '20px 24px', borderBottom: i < filteredClients.length - 1 ? '1px solid #f3f4f6' : 'none', alignItems: 'center', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = '#f3f4f6'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+            {/* 거래처명 + 유형 뱃지 + 제품 태그 */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontWeight: '600', color: '#111827', cursor: 'pointer' }} onClick={() => setPopup({ type: 'notes', data: c })}>{c.name}</span>
+                <span style={{ background: c.type === 'hospital' ? '#dbeafe' : '#fef3c7', color: c.type === 'hospital' ? '#1e40af' : '#92400e', padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: '600' }}>{c.type === 'hospital' ? '병원' : '약국'}</span>
+              </div>
+              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                {c.products.map((p, idx) => (
+                  <span key={idx} style={{ background: '#f3f4f6', color: '#6b7280', padding: '2px 6px', borderRadius: '8px', fontSize: '10px' }}>{p}</span>
+                ))}
+              </div>
+            </div>
+            {/* 주소 (전체) */}
+            <div style={{ color: '#6b7280', fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.address}>{c.address}</div>
+            {/* 의료진 */}
+            <div style={{ color: '#38bdf8', cursor: 'pointer' }} onClick={() => setPopup({ type: 'staff', data: c })}>{c.staff}</div>
+            {/* 전화번호 */}
+            <div
+              style={{ color: '#3b82f6', fontSize: '14px', cursor: 'pointer', textDecoration: 'underline' }}
+              onClick={() => setSmsPopup(c)}
+            >
+              {c.phone}
+            </div>
+            {/* 이메일 */}
+            <a
+              href={`mailto:${c.email}`}
+              style={{ color: '#3b82f6', fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', textDecoration: 'none', cursor: 'pointer' }}
+              onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
+              onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}
+            >
+              {c.email}
+            </a>
+            {/* 그레이드 */}
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <span style={{ fontWeight: '700', fontSize: '16px', color: '#111827', cursor: 'pointer' }} onClick={() => setEditingGrade(c)}>{c.grade}</span>
+            </div>
+            {/* 방문예정일 + 최종방문 */}
+            <div style={{ cursor: 'pointer' }} onClick={() => setSchedulePopup(c)}>
+              <div style={{ color: c.scheduledVisit ? '#fbbf24' : '#9ca3af', fontSize: '14px', fontWeight: c.scheduledVisit ? '600' : 'normal' }}>{c.scheduledVisit || '-'}</div>
+              <div style={{ color: '#9ca3af', fontSize: '12px', marginTop: '2px' }}>마지막 방문일: {c.lastVisit}</div>
+            </div>
+            {/* 방문 기록하기 버튼 */}
+            <div>
+              <button
+                onClick={() => setVisitRecordPopup(c)}
+                style={{
+                  padding: '8px 12px',
+                  background: 'linear-gradient(135deg, #10b981, #059669)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: '#ffffff',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                방문 기록하기
+              </button>
+            </div>
           </div>
         ))}
       </div>
 
-      {/* NECA Popup */}
-      {popup.type === 'neca' && (
+      {/* Notes Popup */}
+      {popup.type === 'notes' && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div style={{ background: '#ffffff', borderRadius: '16px', padding: '32px', width: '400px', border: '1px solid #f3f4f6', position: 'relative' }}>
+          <div style={{ background: '#ffffff', borderRadius: '16px', padding: '32px', width: '500px', border: '1px solid #f3f4f6', position: 'relative' }}>
             <button onClick={closePopup} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#6b7280', fontSize: '24px', cursor: 'pointer' }}>×</button>
             <h3 style={{ margin: '0 0 24px', color: '#111827' }}>{popup.data.name}</h3>
             <div style={{ background: '#f9fafb', borderRadius: '12px', padding: '20px' }}>
-              <p style={{ color: '#6b7280', fontSize: '13px', margin: '0 0 8px' }}>NECA 등록일</p>
-              <p style={{ color: popup.data.neca ? '#4ade80' : '#ef4444', fontSize: '20px', fontWeight: '600', margin: 0 }}>{popup.data.neca || '미등록'}</p>
+              <p style={{ color: '#6b7280', fontSize: '13px', margin: '0 0 12px', fontWeight: '600' }}>비고</p>
+              <p style={{ color: '#111827', fontSize: '15px', margin: 0, lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>{popup.data.notes || '-'}</p>
             </div>
           </div>
         </div>
       )}
 
-      {/* Doctors Popup */}
-      {popup.type === 'doctors' && (
+      {/* Staff Popup */}
+      {popup.type === 'staff' && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div style={{ background: '#ffffff', borderRadius: '16px', padding: '32px', width: '400px', border: '1px solid #f3f4f6', position: 'relative', maxHeight: '80vh', overflowY: 'auto' }}>
             <button onClick={closePopup} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#6b7280', fontSize: '24px', cursor: 'pointer' }}>×</button>
-            <h3 style={{ margin: '0 0 24px', color: '#111827' }}>소속 의사</h3>
+            <h3 style={{ margin: '0 0 24px', color: '#111827' }}>소속 의료진</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div style={{ background: '#f9fafb', borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: '#111827' }}>{popup.data.doctor}</span>
-                <span style={{ background: '#38bdf8', color: '#f9fafb', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600' }}>대표원장</span>
+                <span style={{ color: '#111827' }}>{popup.data.staff}</span>
+                <span style={{ background: '#38bdf8', color: '#f9fafb', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600' }}>대표</span>
               </div>
-              {popup.data.otherDoctors.map((d, i) => (
+              {popup.data.otherStaff.map((s, i) => (
                 <div key={i} style={{ background: '#f9fafb', borderRadius: '12px', padding: '16px' }}>
-                  <span style={{ color: '#6b7280' }}>{d}</span>
+                  <span style={{ color: '#6b7280' }}>{s}</span>
                 </div>
               ))}
-              {popup.data.otherDoctors.length === 0 && <p style={{ color: '#6b7280', textAlign: 'center', padding: '20px' }}>소속 의사 없음</p>}
+              {popup.data.otherStaff.length === 0 && <p style={{ color: '#6b7280', textAlign: 'center', padding: '20px' }}>소속 의료진 없음</p>}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Memo Popup */}
+      {popup.type === 'memo' && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: '#ffffff', borderRadius: '16px', padding: '32px', width: '450px', border: '1px solid #f3f4f6', position: 'relative' }}>
+            <button onClick={closePopup} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#6b7280', fontSize: '24px', cursor: 'pointer' }}>×</button>
+            <h3 style={{ margin: '0 0 8px', color: '#111827' }}>{popup.data.name}</h3>
+            <p style={{ color: '#6b7280', margin: '0 0 16px', fontSize: '14px' }}>메모</p>
+
+            {/* Visibility Toggle */}
+            <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#f9fafb', padding: '12px 16px', borderRadius: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '16px' }}>{popup.data.memoIsPublic ? '🌐' : '🔒'}</span>
+                <span style={{ color: '#6b7280', fontSize: '13px', fontWeight: '500' }}>
+                  {popup.data.memoIsPublic ? '공개 메모' : '비공개 메모'}
+                </span>
+              </div>
+              <button
+                onClick={() => toggleMemoVisibility(popup.data.id)}
+                style={{
+                  padding: '6px 16px',
+                  background: popup.data.memoIsPublic ? 'linear-gradient(135deg, #4ade80, #22c55e)' : 'linear-gradient(135deg, #94a3b8, #64748b)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: '#ffffff',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                {popup.data.memoIsPublic ? '비공개로 전환' : '공개로 전환'}
+              </button>
+            </div>
+
+            <div style={{ background: '#f9fafb', borderRadius: '12px', padding: '16px', minHeight: '100px' }}>
+              <p style={{ color: '#111827', margin: 0, lineHeight: '1.6' }}>{popup.data.memo}</p>
             </div>
           </div>
         </div>
@@ -92,9 +409,21 @@ export default function HospitalDashboard() {
           <div style={{ background: '#ffffff', borderRadius: '16px', padding: '32px', width: '450px', border: '1px solid #f3f4f6', position: 'relative' }}>
             <button onClick={closePopup} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#6b7280', fontSize: '24px', cursor: 'pointer' }}>×</button>
             <h3 style={{ margin: '0 0 8px', color: '#111827' }}>문자 발송</h3>
-            <p style={{ color: '#6b7280', margin: '0 0 24px', fontSize: '14px' }}>{smsPopup.name} · {smsPopup.phone}</p>
+            <p style={{ color: '#6b7280', margin: '0 0 4px', fontSize: '14px' }}>수신: {smsPopup.name} · {smsPopup.phone}</p>
+            <p style={{ color: '#3b82f6', margin: '0 0 20px', fontSize: '13px', fontWeight: '500' }}>발신: {senderPhone}</p>
             <textarea placeholder="메시지를 입력하세요..." style={{ width: '100%', height: '120px', background: '#f9fafb', border: '1px solid #f3f4f6', borderRadius: '12px', padding: '16px', color: '#111827', fontSize: '14px', resize: 'none', boxSizing: 'border-box' }} />
-            <button style={{ width: '100%', marginTop: '16px', padding: '14px', background: 'linear-gradient(135deg, #4ade80, #22c55e)', border: 'none', borderRadius: '12px', color: '#f9fafb', fontWeight: '600', cursor: 'pointer', fontSize: '15px' }}>발송하기</button>
+            <button
+              style={{ width: '100%', marginTop: '16px', padding: '14px', background: 'linear-gradient(135deg, #4ade80, #22c55e)', border: 'none', borderRadius: '12px', color: '#f9fafb', fontWeight: '600', cursor: 'pointer', fontSize: '15px' }}
+              onClick={() => {
+                // TODO: 서버 연동 시 SMS 발송 API 호출
+                // POST /api/sms/send
+                // { to: smsPopup.phone, from: senderPhone, message: textarea.value }
+                alert('문자 발송 기능은 서버 연동 후 사용 가능합니다.');
+                closePopup();
+              }}
+            >
+              발송하기
+            </button>
           </div>
         </div>
       )}
@@ -102,14 +431,29 @@ export default function HospitalDashboard() {
       {/* Schedule Popup */}
       {schedulePopup && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div style={{ background: '#ffffff', borderRadius: '16px', padding: '32px', width: '500px', border: '1px solid #f3f4f6', position: 'relative', maxHeight: '80vh', overflowY: 'auto' }}>
+          <div style={{ background: '#ffffff', borderRadius: '16px', padding: '32px', width: '550px', border: '1px solid #f3f4f6', position: 'relative', maxHeight: '80vh', overflowY: 'auto' }}>
             <button onClick={closePopup} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#6b7280', fontSize: '24px', cursor: 'pointer' }}>×</button>
             <h3 style={{ margin: '0 0 24px', color: '#111827' }}>방문 히스토리</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
               {schedulePopup.partners.map((p, i) => (
-                <div key={i} style={{ background: '#f9fafb', borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#6b7280' }}>{p.name}</span>
-                  <span style={{ color: '#fbbf24' }}>{p.date}</span>
+                <div key={i} style={{ background: '#f9fafb', borderRadius: '12px', padding: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ fontWeight: '600', color: '#111827' }}>{p.name}</span>
+                    <span style={{ color: '#fbbf24' }}>{p.date}</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '4px', marginBottom: '6px', flexWrap: 'wrap' }}>
+                    {p.products.map((prod, idx) => (
+                      <span key={idx} style={{ background: '#e0e7ff', color: '#4338ca', padding: '2px 8px', borderRadius: '8px', fontSize: '11px' }}>{prod}</span>
+                    ))}
+                  </div>
+                  {p.memo && (
+                    <p
+                      style={{ color: '#3b82f6', fontSize: '13px', margin: 0, cursor: 'pointer', textDecoration: 'underline' }}
+                      onClick={() => setMemoDetailPopup({ partner: p.name, date: p.date, memo: p.memo })}
+                    >
+                      {p.memo}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
@@ -122,6 +466,365 @@ export default function HospitalDashboard() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Grade Edit Popup */}
+      {editingGrade && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: '#ffffff', borderRadius: '16px', padding: '32px', width: '450px', border: '1px solid #f3f4f6', position: 'relative' }}>
+            <button onClick={closePopup} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#6b7280', fontSize: '24px', cursor: 'pointer' }}>×</button>
+            <h3 style={{ margin: '0 0 8px', color: '#111827' }}>{editingGrade.name}</h3>
+            <p style={{ color: '#6b7280', margin: '0 0 24px', fontSize: '14px' }}>그레이드 수정</p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
+              {['A', 'B', 'C', 'D'].map(grade => {
+                const isSelected = editingGrade.grade === grade;
+                return (
+                  <button
+                    key={grade}
+                    onClick={() => updateGrade(editingGrade.id, grade)}
+                    style={{
+                      background: isSelected ? '#111827' : '#f9fafb',
+                      border: isSelected ? 'none' : '2px solid #e5e7eb',
+                      borderRadius: '12px',
+                      padding: '24px',
+                      color: isSelected ? '#ffffff' : '#6b7280',
+                      fontSize: '32px',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                    onMouseEnter={e => {
+                      if (!isSelected) {
+                        e.currentTarget.style.background = '#f3f4f6';
+                        e.currentTarget.style.borderColor = '#d1d5db';
+                      }
+                    }}
+                    onMouseLeave={e => {
+                      if (!isSelected) {
+                        e.currentTarget.style.background = '#f9fafb';
+                        e.currentTarget.style.borderColor = '#e5e7eb';
+                      }
+                    }}
+                  >
+                    {grade}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div style={{ marginTop: '24px', padding: '16px', background: '#f9fafb', borderRadius: '12px' }}>
+              <p style={{ color: '#6b7280', fontSize: '13px', margin: '0 0 8px' }}>
+                <strong>현재 그레이드:</strong> {editingGrade.grade}
+              </p>
+              <p style={{ color: '#9ca3af', fontSize: '12px', margin: 0 }}>
+                A: 월 3회 이상 | B: 월 2회 | C: 월 1회 | D: 필요시
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Nested Memo Detail Popup */}
+      {memoDetailPopup && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
+          <div style={{ background: '#ffffff', borderRadius: '16px', padding: '32px', width: '450px', border: '1px solid #f3f4f6', position: 'relative' }}>
+            <button onClick={() => setMemoDetailPopup(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#6b7280', fontSize: '24px', cursor: 'pointer' }}>×</button>
+            <h3 style={{ margin: '0 0 8px', color: '#111827' }}>방문 메모 상세</h3>
+            <p style={{ color: '#6b7280', margin: '0 0 24px', fontSize: '14px' }}>{memoDetailPopup.partner} · {memoDetailPopup.date}</p>
+            <div style={{ background: '#f9fafb', borderRadius: '12px', padding: '20px', minHeight: '100px' }}>
+              <p style={{ color: '#111827', margin: 0, lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>{memoDetailPopup.memo}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Visit Record Popup */}
+      {visitRecordPopup && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: '#ffffff', borderRadius: '16px', padding: '32px', width: '550px', maxHeight: '80vh', overflowY: 'auto', border: '1px solid #f3f4f6', position: 'relative' }}>
+            <button onClick={closePopup} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: '#6b7280', fontSize: '24px', cursor: 'pointer' }}>×</button>
+            <h3 style={{ margin: '0 0 8px', color: '#111827' }}>방문 기록 등록</h3>
+            <p style={{ color: '#6b7280', margin: '0 0 24px', fontSize: '14px' }}>거래처: {visitRecordPopup.name}</p>
+
+            {/* 날짜 */}
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ color: '#6b7280', fontSize: '13px', marginBottom: '8px', display: 'block', fontWeight: '600' }}>날짜 *</label>
+              <input
+                type="date"
+                value={visitRecord.date}
+                onChange={(e) => setVisitRecord({ ...visitRecord, date: e.target.value })}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  background: '#f9fafb',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  color: '#111827',
+                  fontSize: '14px',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+
+            {/* 방문 상태 */}
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ color: '#6b7280', fontSize: '13px', marginBottom: '8px', display: 'block', fontWeight: '600' }}>방문 상태 *</label>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={() => setVisitRecord({ ...visitRecord, status: 'completed' })}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    background: visitRecord.status === 'completed' ? '#10b981' : '#f9fafb',
+                    border: visitRecord.status === 'completed' ? 'none' : '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    color: visitRecord.status === 'completed' ? '#ffffff' : '#6b7280',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  ✓ 방문 완료
+                </button>
+                <button
+                  onClick={() => setVisitRecord({ ...visitRecord, status: 'cancelled' })}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    background: visitRecord.status === 'cancelled' ? '#ef4444' : '#f9fafb',
+                    border: visitRecord.status === 'cancelled' ? 'none' : '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    color: visitRecord.status === 'cancelled' ? '#ffffff' : '#6b7280',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  ✗ 방문 취소
+                </button>
+              </div>
+            </div>
+
+            {/* 방문 취소 시 필드 */}
+            {visitRecord.status === 'cancelled' && (
+              <>
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ color: '#6b7280', fontSize: '13px', marginBottom: '8px', display: 'block', fontWeight: '600' }}>취소 사유 *</label>
+                  <select
+                    value={visitRecord.cancelReason}
+                    onChange={(e) => setVisitRecord({ ...visitRecord, cancelReason: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      background: '#f9fafb',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      color: '#111827',
+                      fontSize: '14px',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    <option value="">선택해주세요</option>
+                    <option value="고객 요청">고객 요청</option>
+                    <option value="일정 충돌">일정 충돌</option>
+                    <option value="긴급 업무">긴급 업무</option>
+                    <option value="병원 휴진">병원 휴진</option>
+                    <option value="기타">기타</option>
+                  </select>
+                </div>
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ color: '#6b7280', fontSize: '13px', marginBottom: '8px', display: 'block', fontWeight: '600' }}>재방문 예정일</label>
+                  <input
+                    type="date"
+                    value={visitRecord.rescheduleDate}
+                    onChange={(e) => setVisitRecord({ ...visitRecord, rescheduleDate: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      background: '#f9fafb',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      color: '#111827',
+                      fontSize: '14px',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+              </>
+            )}
+
+            {/* 방문 완료 시 필드 */}
+            {visitRecord.status === 'completed' && (
+              <>
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ color: '#6b7280', fontSize: '13px', marginBottom: '8px', display: 'block', fontWeight: '600' }}>방문 유형 *</label>
+                  <select
+                    value={visitRecord.visitType}
+                    onChange={(e) => setVisitRecord({ ...visitRecord, visitType: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      background: '#f9fafb',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      color: '#111827',
+                      fontSize: '14px',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    <option value="예정 방문">예정 방문</option>
+                    <option value="돌발 방문">돌발 방문</option>
+                  </select>
+                </div>
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ color: '#6b7280', fontSize: '13px', marginBottom: '8px', display: 'block', fontWeight: '600' }}>제공 제품 *</label>
+
+                  {/* 선택된 제품 표시 */}
+                  {visitRecord.products.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
+                      {visitRecord.products.map((product) => (
+                        <div
+                          key={product}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '6px 12px',
+                            background: '#4338ca',
+                            border: 'none',
+                            borderRadius: '20px',
+                            color: '#ffffff',
+                            fontSize: '13px',
+                            fontWeight: '600'
+                          }}
+                        >
+                          <span>{product}</span>
+                          <button
+                            onClick={() => {
+                              setVisitRecord({
+                                ...visitRecord,
+                                products: visitRecord.products.filter(p => p !== product)
+                              });
+                            }}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: '#ffffff',
+                              cursor: 'pointer',
+                              padding: '0',
+                              fontSize: '16px',
+                              lineHeight: '1',
+                              display: 'flex',
+                              alignItems: 'center'
+                            }}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* 제품 추가 드롭다운 */}
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <select
+                      id="product-select"
+                      style={{
+                        flex: 1,
+                        padding: '10px 12px',
+                        background: '#f9fafb',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        color: '#111827',
+                        fontSize: '14px',
+                        boxSizing: 'border-box'
+                      }}
+                    >
+                      <option value="">제품 선택...</option>
+                      {allProducts
+                        .filter(p => !visitRecord.products.includes(p))
+                        .map(product => (
+                          <option key={product} value={product}>{product}</option>
+                        ))}
+                    </select>
+                    <button
+                      onClick={() => {
+                        const selectEl = document.getElementById('product-select');
+                        const selectedProduct = selectEl.value;
+                        if (selectedProduct && !visitRecord.products.includes(selectedProduct)) {
+                          setVisitRecord({
+                            ...visitRecord,
+                            products: [...visitRecord.products, selectedProduct]
+                          });
+                          selectEl.value = '';
+                        }
+                      }}
+                      style={{
+                        padding: '10px 20px',
+                        background: '#3b82f6',
+                        border: 'none',
+                        borderRadius: '8px',
+                        color: '#ffffff',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      추가
+                    </button>
+                  </div>
+                </div>
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ color: '#6b7280', fontSize: '13px', marginBottom: '8px', display: 'block', fontWeight: '600' }}>메모</label>
+                  <textarea
+                    value={visitRecord.memo}
+                    onChange={(e) => setVisitRecord({ ...visitRecord, memo: e.target.value })}
+                    placeholder="방문 내용을 입력하세요..."
+                    style={{
+                      width: '100%',
+                      minHeight: '100px',
+                      padding: '12px',
+                      background: '#f9fafb',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      color: '#111827',
+                      fontSize: '14px',
+                      resize: 'vertical',
+                      boxSizing: 'border-box',
+                      fontFamily: 'inherit'
+                    }}
+                  />
+                </div>
+              </>
+            )}
+
+            {/* 저장 버튼 */}
+            <button
+              onClick={saveVisitRecord}
+              style={{
+                width: '100%',
+                padding: '14px',
+                background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                border: 'none',
+                borderRadius: '10px',
+                color: '#ffffff',
+                fontSize: '15px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'transform 0.2s'
+              }}
+            >
+              등록
+            </button>
           </div>
         </div>
       )}
