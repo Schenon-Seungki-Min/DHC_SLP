@@ -1,97 +1,45 @@
-# 병원 영업 관리 시스템 MVP
+# Doner — AI Portfolio Agent
 
-여러 협력사가 함께 사용하는 병원 영업 관리 대시보드 시스템입니다.
+디지털 헬스케어 PM 민승기(Coree)의 AI 비즈니스 에이전트 포트폴리오 사이트입니다.
 
-## 🚀 Features
+## Features
 
-- **캔버스 1**: 내 담당 병원 상세 관리
-- **캔버스 2**: 전체 병원 방문 현황
-- **캔버스 3**: 지도 기반 동선 계획
-- **Admin**: 병원/의사/협력사 관리 (관리자 전용)
+- **AI 채팅 인터페이스**: Doner와 대화하며 Coree에 대해 알아보기
+- **오프라인 모드**: API 키 없이도 키워드 기반 응답 제공
+- **API 모드**: Claude API 연동으로 실시간 AI 대화
+- **반응형 디자인**: 모바일/데스크톱 모두 지원
 
-## 🔐 Demo Login Credentials
-
-### Admin Account
-- Username: `admin`
-- Password: `admin123`
-- Access: All features including Admin panel
-
-### User Account
-- Username: `user`
-- Password: `user123`
-- Access: Canvas 1, 2, 3 only
-
-## 📦 Installation
+## Quick Start
 
 ```bash
-# Install dependencies
 npm install
-
-# Run development server
 npm run dev
-
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
 ```
 
-## 🌐 Deployment
+## 배포 (Vercel)
 
-### Vercel (Recommended)
+1. GitHub에 푸시
+2. Vercel에서 프로젝트 임포트
+3. 환경 변수 설정: `ANTHROPIC_API_KEY` (API 모드 사용 시)
+4. 배포
 
-1. Push your code to GitHub
-2. Import project in Vercel
-3. Deploy automatically
+## Tech Stack
 
-### Manual Build
+- React 19 + Vite
+- Vercel Serverless Functions
+- Claude API (Anthropic)
 
-```bash
-npm run build
-# The dist/ folder contains production-ready files
-```
-
-## 📁 Project Structure
+## 프로젝트 구조
 
 ```
-hospital-management/
+doner-portfolio/
 ├── src/
-│   ├── pages/           # Page components
-│   │   ├── Login.jsx
-│   │   ├── Dashboard.jsx
-│   │   ├── AllHospitals.jsx
-│   │   ├── MapPlanner.jsx
-│   │   └── Admin.jsx
-│   ├── components/      # Reusable components
-│   │   ├── Layout.jsx
-│   │   └── PrivateRoute.jsx
-│   ├── contexts/        # React contexts
-│   │   └── AuthContext.jsx
-│   ├── App.jsx
-│   └── main.jsx
-├── public/
+│   ├── components/     # React 컴포넌트
+│   ├── data/           # 시스템 프롬프트 & 응답 데이터
+│   ├── App.jsx         # 메인 앱
+│   └── main.jsx        # 엔트리포인트
+├── api/
+│   └── chat.js         # Vercel Serverless (Claude API)
+├── index.html
 └── package.json
 ```
-
-## 🛠️ Tech Stack
-
-- **Frontend**: React 18 + Vite
-- **Routing**: React Router v6
-- **Styling**: Inline styles (Dark theme)
-- **Authentication**: Local storage + Context API
-- **Data**: Mock data (demo only)
-
-## 📝 Notes
-
-This is a **demo/MVP version** with:
-- Mock data (no backend)
-- Simple authentication (for demo purposes)
-- No database connection
-
-For production use, you would need to:
-- Add backend API (Node.js/FastAPI)
-- Implement real authentication (JWT)
-- Connect to database (PostgreSQL/MySQL)
-- Add proper error handling
-- Implement form validation
